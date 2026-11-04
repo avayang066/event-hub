@@ -1,0 +1,61 @@
+@using EventHub.Web.Infrastructure
+@using EventHub.Web.Services
+@model EventHub.Web.Models.Registration.RegistrationFormViewModel
+@{
+    ViewData["Title"] = "報名";
+}
+
+<a class="d-inline-block mb-2 small" asp-action="Details" asp-route-id="@Model.EventId">‹ 回活動頁</a>
+<h1 class="h4 mb-3">報名</h1>
+
+@* 活動摘要 *@
+<div class="event-status-panel mb-4">
+    <div class="fw-bold">@Model.EventTitle</div>
+    <div class="small text-muted">@EventTimeFormatter.FormatRange(Model.StartAt, Model.EndAt)</div>
+    <div class="small text-muted">@Model.Location</div>
+    <div class="mt-1">@Model.Price.ToPriceLabel()</div>
+</div>
+
+<form asp-action="Register" asp-route-id="@Model.EventId" method="post" novalidate>
+    <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2" role="alert"></div>
+
+    <div class="mb-3">
+        <label asp-for="AttendeeName" class="form-label"></label>
+        <input asp-for="AttendeeName" class="form-control" autocomplete="name" maxlength="50" />
+        <span asp-validation-for="AttendeeName" class="text-danger small"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="AttendeePhone" class="form-label"></label>
+        <input asp-for="AttendeePhone" class="form-control" type="tel" inputmode="tel" autocomplete="tel" placeholder="0912345678" />
+        <span asp-validation-for="AttendeePhone" class="text-danger small"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="AttendeeEmail" class="form-label"></label>
+        <input asp-for="AttendeeEmail" class="form-control" type="email" inputmode="email" autocomplete="email" autocapitalize="off" />
+        <div class="form-text">報名成功通知會寄到這個信箱</div>
+        <span asp-validation-for="AttendeeEmail" class="text-danger small"></span>
+    </div>
+
+    <div class="mb-4">
+        <label asp-for="Note" class="form-label"></label>
+        <textarea asp-for="Note" class="form-control" rows="3" maxlength="500" placeholder="選填，例如飲食需求"></textarea>
+        <span asp-validation-for="Note" class="text-danger small"></span>
+    </div>
+
+    @if (Model.Price > 0)
+    {
+        <p class="small text-muted">
+            送出後會為你保留名額 @RegistrationService.PaymentHoldTime.TotalMinutes.ToString("0") 分鐘，請在時間內完成付款，逾時名額將釋出。
+        </p>
+    }
+
+    <button type="submit" class="btn btn-primary btn-lg w-100">
+        @(Model.Price > 0 ? "送出報名並前往付款" : "送出報名")
+    </button>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

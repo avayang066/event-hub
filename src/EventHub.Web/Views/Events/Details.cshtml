@@ -1,3 +1,4 @@
+@using EventHub.Web.Data
 @using EventHub.Web.Infrastructure
 @using EventHub.Web.Services
 @model EventHub.Web.Models.Events.EventDetailViewModel
@@ -70,13 +71,21 @@
             <div class="small text-muted">剩 @Model.RemainingSeats 名</div>
         }
     </div>
-    @if (Model.Availability == RegistrationAvailability.Open)
+    @if (Model.MyOrderNo is not null)
     {
-        @* TODO 第 4 步：連到報名表單 *@
-        <button type="button" class="btn btn-primary btn-lg" disabled>報名功能即將開放</button>
+        <a class="btn btn-outline-primary btn-lg" asp-controller="Orders" asp-action="Details" asp-route-orderNo="@Model.MyOrderNo">查看我的報名</a>
+    }
+    else if (Model.Availability != RegistrationAvailability.Open)
+    {
+        <button type="button" class="btn btn-secondary btn-lg" disabled>@Model.Availability.ToLabel()</button>
+    }
+    else if (User.Identity?.IsAuthenticated == true && !User.IsInRole(AppRoles.Attendee))
+    {
+        <button type="button" class="btn btn-secondary btn-lg" disabled>僅限報名者帳號報名</button>
     }
     else
     {
-        <button type="button" class="btn btn-secondary btn-lg" disabled>@Model.Availability.ToLabel()</button>
+        @* 未登入會先被導到登入頁，登入後回到報名表單 *@
+        <a class="btn btn-primary btn-lg" asp-action="Register" asp-route-id="@Model.Id">立即報名</a>
     }
 </div>

@@ -113,6 +113,17 @@ public class EventQueryService(AppDbContext db, TimeProvider timeProvider)
             return null;
         }
 
+        var now = timeProvider.GetTaiwanNow();
+        string? myOrderNo = null;
+        if (viewerUserId is not null)
+        {
+            myOrderNo = await db.Orders
+                .Where(o => o.EventId == id && o.UserId == viewerUserId
+                    && (o.Status == OrderStatus.Paid || (o.Status == OrderStatus.Pending && o.ExpiresAt > now)))
+                .Select(o => o.OrderNo)
+                .FirstOrDefaultAsync();
+        }
+
         return new EventDetailViewModel
         {
             Id = e.Id,
@@ -127,8 +138,9 @@ public class EventQueryService(AppDbContext db, TimeProvider timeProvider)
             RemainingSeats = Math.Max(0, e.Capacity - e.ReservedCount),
             CoverImagePath = e.CoverImagePath,
             OrganizerName = string.IsNullOrWhiteSpace(e.Organizer.DisplayName) ? "主辦單位" : e.Organizer.DisplayName,
-            Availability = EventAvailability.Evaluate(e, timeProvider.GetTaiwanNow()),
+            Availability = EventAvailability.Evaluate(e, now),
             IsOwner = isOwner,
+            MyOrderNo = myOrderNo,
         };
     }
 }

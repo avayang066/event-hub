@@ -1,0 +1,96 @@
+@using EventHub.Web.Infrastructure
+@using EventHub.Web.Services
+@model EventHub.Web.Models.Orders.OrderDetailViewModel
+@{
+    ViewData["Title"] = "報名明細";
+}
+
+<a class="d-inline-block mb-2 small" asp-action="Index">‹ 我的報名</a>
+
+<div class="d-flex align-items-center justify-content-between mb-3">
+    <h1 class="h4 mb-0">報名明細</h1>
+    <span class="badge @Model.Status.ToBadgeClass() fs-6">@Model.Status.ToLabel()</span>
+</div>
+
+@switch (Model.Status)
+{
+    case OrderDisplayStatus.AwaitingPayment:
+        <div class="alert alert-warning">
+            名額保留至 <strong>@Model.ExpiresAt!.Value.ToString("HH:mm")</strong>，請在此之前完成付款，逾時名額將釋出。
+        </div>
+        break;
+    case OrderDisplayStatus.PaymentExpired:
+        <div class="alert alert-secondary">
+            已超過付款期限，此筆報名將被取消。如仍想參加，請回活動頁重新報名。
+        </div>
+        break;
+    case OrderDisplayStatus.Paid:
+        <div class="alert alert-success">報名成功，活動當天見！</div>
+        break;
+}
+
+<dl class="event-detail-info">
+    <dt>活動</dt>
+    <dd><a asp-controller="Events" asp-action="Details" asp-route-id="@Model.EventId">@Model.EventTitle</a></dd>
+
+    <dt>時間</dt>
+    <dd>@EventTimeFormatter.FormatRange(Model.EventStartAt, Model.EventEndAt)</dd>
+
+    <dt>地點</dt>
+    <dd>@Model.EventLocation</dd>
+
+    <dt>金額</dt>
+    <dd>@Model.Amount.ToPriceLabel()</dd>
+</dl>
+
+<h2 class="h6 mt-4">報名資料</h2>
+<dl class="event-detail-info">
+    <dt>姓名</dt>
+    <dd>@Model.AttendeeName</dd>
+
+    <dt>手機</dt>
+    <dd>@Model.AttendeePhone</dd>
+
+    <dt>Email</dt>
+    <dd class="text-break">@Model.AttendeeEmail</dd>
+
+    @if (Model.Note is not null)
+    {
+        <dt>備註</dt>
+        <dd class="event-detail-description">@Model.Note</dd>
+    }
+</dl>
+
+<h2 class="h6 mt-4">訂單資訊</h2>
+<dl class="event-detail-info">
+    <dt>訂單編號</dt>
+    <dd class="font-monospace">@Model.OrderNo</dd>
+
+    <dt>報名時間</dt>
+    <dd>@EventTimeFormatter.FormatDateTime(Model.CreatedAt)</dd>
+
+    @if (Model.PaidAt is not null && Model.Amount > 0)
+    {
+        <dt>付款時間</dt>
+        <dd>@EventTimeFormatter.FormatDateTime(Model.PaidAt.Value)</dd>
+    }
+    @if (Model.CancelledAt is not null)
+    {
+        <dt>取消時間</dt>
+        <dd>@EventTimeFormatter.FormatDateTime(Model.CancelledAt.Value)</dd>
+    }
+    @if (Model.RefundedAt is not null)
+    {
+        <dt>退款時間</dt>
+        <dd>@EventTimeFormatter.FormatDateTime(Model.RefundedAt.Value)</dd>
+    }
+</dl>
+
+@if (Model.IsAwaitingPayment)
+{
+    <div class="event-detail-action">
+        <div class="fw-bold">@Model.Amount.ToPriceLabel()</div>
+        @* TODO 第 5 步：送出綠界結帳 *@
+        <button type="button" class="btn btn-primary btn-lg" disabled>付款功能即將開放</button>
+    </div>
+}

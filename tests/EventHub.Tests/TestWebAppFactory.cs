@@ -9,25 +9,32 @@ namespace EventHub.Tests;
 
 /// <summary>
 /// 整合測試用的網站：
-/// - 資料庫換成 SQLite 記憶體資料庫（支援條件式 UPDATE、外鍵、check constraint，行為接近 MySQL），
-///   不會碰到 Laragon 的 MySQL
-/// - 上傳檔案存到暫存資料夾，測試結束後刪除
+/// - 資料庫換成暫存資料夾裡的 SQLite 檔案（支援條件式 UPDATE、交易、外鍵、check constraint，行為接近 MySQL），
+///   不會碰到 Laragon 的 MySQL。每個請求各自開連線，可以測試多人同時報名。
+/// - 上傳檔案也存到同一個暫存資料夾，測試結束後整個刪除
 /// </summary>
 public class TestWebAppFactory : WebApplicationFactory<Program>
 {
-    // SQLite 記憶體資料庫只在連線開著時存在，所以整個測試期間保持同一條連線
-    private readonly SqliteConnection _connection = new("DataSource=:memory:");
-
-    public string UploadRoot { get; } =
+    private readonly string _tempRoot =
         Path.Combine(Path.GetTempPath(), "eventhub-tests", Guid.NewGuid().ToString("N"));
+
+    private readonly string _connectionString;
+
+    public string UploadRoot => Path.Combine(_tempRoot, "uploads");
 
     public TestWebAppFactory()
     {
-        _connection.Open();
+        Directory.CreateDirectory(_tempRoot);
+        _connectionString = new SqliteConnectionStringBuilder
+        {
+            DataSource = Path.Combine(_tempRoot, "test.db"),
+            // 多人同時寫入時，等待鎖釋放的上限
+            DefaultTimeout = 30,
+        }.ToString();
 
         // 網站啟動時會建立角色與管理員帳號，所以要先把資料表建好
         using var db = new AppDbContext(
-            new DbContextOptionsBuilder<AppDbContext>().UseSqlite(_connection).Options);
+            new DbContextOptionsBuilder<AppDbContext>().UseSqlite(_connectionString).Options);
         db.Database.EnsureCreated();
     }
 
@@ -40,7 +47,7 @@ public class TestWebAppFactory : WebApplicationFactory<Program>
         builder.ConfigureServices(services =>
         {
             services.RemoveAll<DbContextOptions<AppDbContext>>();
-            services.AddDbContext<AppDbContext>(o => o.UseSqlite(_connection));
+            services.AddDbContext<AppDbContext>(o => o.UseSqlite(_connectionString));
         });
     }
 
@@ -63,12 +70,13 @@ public class TestWebAppFactory : WebApplicationFactory<Program>
 
         if (disposing)
         {
-            _connection.Dispose();
+            // 關掉連線池，資料庫檔案才不會被鎖住而刪不掉
+            SqliteConnection.ClearAllPools();
             try
             {
-                if (Directory.Exists(UploadRoot))
+                if (Directory.Exists(_tempRoot))
                 {
-                    Directory.Delete(UploadRoot, recursive: true);
+                    Directory.Delete(_tempRoot, recursive: true);
                 }
             }
             catch (IOException)

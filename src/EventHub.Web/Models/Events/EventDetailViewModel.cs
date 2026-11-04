@@ -22,6 +22,9 @@ public class EventDetailViewModel
     /// <summary>目前瀏覽者就是這個活動的主辦方</summary>
     public bool IsOwner { get; init; }
 
+    /// <summary>目前瀏覽者在此活動的有效訂單編號（已付款或待付款未逾期）；沒有則為 null</summary>
+    public string? MyOrderNo { get; init; }
+
     /// <summary>主辦方預覽自己尚未上架的草稿</summary>
     public bool IsDraftPreview => Availability == RegistrationAvailability.NotPublished;
 

@@ -12,6 +12,10 @@
             </button>
             <ul class="dropdown-menu dropdown-menu-end">
                 <li><span class="dropdown-item-text small text-muted">@User.Identity.Name</span></li>
+                @if (User.IsInRole(AppRoles.Attendee))
+                {
+                    <li><a class="dropdown-item" asp-controller="Orders" asp-action="Index">我的報名</a></li>
+                }
                 @if (User.IsInRole(AppRoles.Organizer))
                 {
                     <li><a class="dropdown-item" asp-controller="Organizer" asp-action="Index">我的活動</a></li>
