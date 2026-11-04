@@ -187,6 +187,231 @@ namespace EventHub.Web.Data.Migrations
                         });
                 });
 
+            modelBuilder.Entity("EventHub.Web.Data.Entities.Order", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("Amount")
+                        .HasColumnType("int")
+                        .HasColumnName("amount");
+
+                    b.Property<string>("AttendeeEmail")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)")
+                        .HasColumnName("attendee_email");
+
+                    b.Property<string>("AttendeeName")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("attendee_name");
+
+                    b.Property<string>("AttendeePhone")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("attendee_phone");
+
+                    b.Property<DateTime?>("CancelledAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("cancelled_at");
+
+                    b.Property<DateTime?>("ConfirmationEmailSentAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("confirmation_email_sent_at");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("EcpayTradeNo")
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("ecpay_trade_no");
+
+                    b.Property<int>("EventId")
+                        .HasColumnType("int")
+                        .HasColumnName("event_id");
+
+                    b.Property<DateTime?>("ExpiresAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("expires_at");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)")
+                        .HasColumnName("note");
+
+                    b.Property<string>("OrderNo")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("order_no");
+
+                    b.Property<int>("OrganizerAmount")
+                        .HasColumnType("int")
+                        .HasColumnName("organizer_amount");
+
+                    b.Property<string>("OrganizerId")
+                        .IsRequired()
+                        .HasColumnType("varchar(255)")
+                        .HasColumnName("organizer_id");
+
+                    b.Property<DateTime?>("PaidAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("paid_at");
+
+                    b.Property<string>("PaymentType")
+                        .HasMaxLength(30)
+                        .HasColumnType("varchar(30)")
+                        .HasColumnName("payment_type");
+
+                    b.Property<int>("PlatformFee")
+                        .HasColumnType("int")
+                        .HasColumnName("platform_fee");
+
+                    b.Property<int?>("RefundAmount")
+                        .HasColumnType("int")
+                        .HasColumnName("refund_amount");
+
+                    b.Property<DateTime?>("RefundedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("refunded_at");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("status");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("updated_at");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("varchar(255)")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EcpayTradeNo")
+                        .IsUnique()
+                        .HasDatabaseName("ux_orders_ecpay_trade_no");
+
+                    b.HasIndex("OrderNo")
+                        .IsUnique()
+                        .HasDatabaseName("ux_orders_order_no");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("ix_orders_user_id");
+
+                    b.HasIndex("EventId", "Status")
+                        .HasDatabaseName("ix_orders_event_status");
+
+                    b.HasIndex("OrganizerId", "Status")
+                        .HasDatabaseName("ix_orders_organizer_status");
+
+                    b.HasIndex("Status", "ExpiresAt")
+                        .HasDatabaseName("ix_orders_status_expires_at");
+
+                    b.ToTable("orders", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_orders_amount", "amount >= 0");
+
+                            t.HasCheckConstraint("ck_orders_fee", "platform_fee >= 0 AND platform_fee <= amount");
+
+                            t.HasCheckConstraint("ck_orders_split", "organizer_amount = amount - platform_fee");
+                        });
+                });
+
+            modelBuilder.Entity("EventHub.Web.Data.Entities.PaymentNotification", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("EcpayTradeNo")
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("ecpay_trade_no");
+
+                    b.Property<bool>("IsCheckMacValid")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("is_check_mac_valid");
+
+                    b.Property<bool>("IsSimulated")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("is_simulated");
+
+                    b.Property<string>("MerchantTradeNo")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("merchant_trade_no");
+
+                    b.Property<int?>("OrderId")
+                        .HasColumnType("int")
+                        .HasColumnName("order_id");
+
+                    b.Property<string>("PaymentDate")
+                        .HasMaxLength(30)
+                        .HasColumnType("varchar(30)")
+                        .HasColumnName("payment_date");
+
+                    b.Property<string>("PaymentType")
+                        .HasMaxLength(30)
+                        .HasColumnType("varchar(30)")
+                        .HasColumnName("payment_type");
+
+                    b.Property<string>("ProcessResult")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("varchar(30)")
+                        .HasColumnName("process_result");
+
+                    b.Property<string>("RawPayload")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("raw_payload");
+
+                    b.Property<DateTime>("ReceivedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("received_at");
+
+                    b.Property<int>("RtnCode")
+                        .HasColumnType("int")
+                        .HasColumnName("rtn_code");
+
+                    b.Property<string>("RtnMsg")
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)")
+                        .HasColumnName("rtn_msg");
+
+                    b.Property<int>("TradeAmount")
+                        .HasColumnType("int")
+                        .HasColumnName("trade_amount");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MerchantTradeNo")
+                        .HasDatabaseName("ix_payment_notifications_merchant_trade_no");
+
+                    b.HasIndex("OrderId")
+                        .HasDatabaseName("ix_payment_notifications_order_id");
+
+                    b.ToTable("payment_notifications", (string)null);
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
                 {
                     b.Property<string>("Id")
@@ -332,6 +557,43 @@ namespace EventHub.Web.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("Organizer");
+                });
+
+            modelBuilder.Entity("EventHub.Web.Data.Entities.Order", b =>
+                {
+                    b.HasOne("EventHub.Web.Data.Entities.Event", "Event")
+                        .WithMany()
+                        .HasForeignKey("EventId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("EventHub.Web.Data.ApplicationUser", "Organizer")
+                        .WithMany()
+                        .HasForeignKey("OrganizerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("EventHub.Web.Data.ApplicationUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Event");
+
+                    b.Navigation("Organizer");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("EventHub.Web.Data.Entities.PaymentNotification", b =>
+                {
+                    b.HasOne("EventHub.Web.Data.Entities.Order", "Order")
+                        .WithMany()
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Order");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>

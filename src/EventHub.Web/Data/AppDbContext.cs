@@ -9,8 +9,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
     : IdentityDbContext<ApplicationUser>(options)
 {
     public DbSet<Event> Events => Set<Event>();
-
-    // 之後在這裡加入 DbSet：Registrations、Orders、PaymentNotifications、Payouts...
+    public DbSet<Order> Orders => Set<Order>();
+    public DbSet<PaymentNotification> PaymentNotifications => Set<PaymentNotification>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
