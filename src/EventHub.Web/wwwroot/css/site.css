@@ -1,0 +1,60 @@
+/* 手機版優先：內容最寬 480px 置中，桌機瀏覽也維持手機版面 */
+:root {
+  --app-max-width: 480px;
+  --app-header-height: 56px;
+}
+
+html {
+  font-size: 16px;
+}
+
+body {
+  background: #f2f3f5;
+  font-family: system-ui, -apple-system, "PingFang TC", "Microsoft JhengHei", "Noto Sans TC", sans-serif;
+  -webkit-text-size-adjust: 100%;
+}
+
+.app-shell {
+  max-width: var(--app-max-width);
+  min-height: 100dvh;
+  margin: 0 auto;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 1020;
+  height: var(--app-header-height);
+  padding: 0 12px;
+  padding-top: env(safe-area-inset-top);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #fff;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.app-brand {
+  font-weight: 700;
+  font-size: 1.125rem;
+  color: inherit;
+  text-decoration: none;
+}
+
+.app-main {
+  flex: 1;
+  padding: 16px;
+  padding-bottom: calc(16px + env(safe-area-inset-bottom));
+}
+
+/* 手機觸控：按鈕至少 44px 高 */
+.btn-lg, .btn-block-mobile {
+  min-height: 44px;
+}
+
+.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
+  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+}
