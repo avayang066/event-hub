@@ -1,11 +1,16 @@
+using System.Globalization;
 using System.Text.Encodings.Web;
 using System.Text.Unicode;
 using EventHub.Web.Data;
 using EventHub.Web.Infrastructure;
+using EventHub.Web.Services;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.WebEncoders;
+
+// 日期、星期、數字一律以台灣格式顯示（例如「週三」），不受主機系統語系影響
+CultureInfo.DefaultThreadCurrentCulture = CultureInfo.DefaultThreadCurrentUICulture = new CultureInfo("zh-TW");
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -55,6 +60,12 @@ builder.Services.ConfigureApplicationCookie(options =>
 builder.Services.Configure<EcpayOptions>(builder.Configuration.GetSection(EcpayOptions.SectionName));
 builder.Services.Configure<SmtpOptions>(builder.Configuration.GetSection(SmtpOptions.SectionName));
 builder.Services.Configure<AdminAccountOptions>(builder.Configuration.GetSection(AdminAccountOptions.SectionName));
+builder.Services.Configure<UploadOptions>(builder.Configuration.GetSection(UploadOptions.SectionName));
+
+// ---- 商業邏輯與共用服務 ----
+builder.Services.AddSingleton(TimeProvider.System);
+builder.Services.AddSingleton<EventImageStorage>();
+builder.Services.AddScoped<OrganizerEventService>();
 
 // ---- 反向代理（ngrok / 正式環境的 Nginx）：讓 Request.Scheme / RemoteIp 正確 ----
 builder.Services.Configure<ForwardedHeadersOptions>(options =>

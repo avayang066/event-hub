@@ -1,0 +1,95 @@
+@using EventHub.Web.Data.Entities
+@model EventHub.Web.Models.Organizer.EventFormViewModel
+@{
+    var readOnly = Model.Status == EventStatus.Cancelled;
+    var priceLocked = Model.HasRegistrations;
+    const string dateTimeFormat = "{0:yyyy-MM-ddTHH:mm}";
+}
+
+<fieldset disabled="@readOnly">
+    <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2" role="alert"></div>
+
+    <div class="mb-3">
+        <label asp-for="Title" class="form-label"></label>
+        <input asp-for="Title" class="form-control" maxlength="100" />
+        <span asp-validation-for="Title" class="text-danger small"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="CoverImage" class="form-label"></label>
+        @if (Model.CurrentCoverImagePath is not null)
+        {
+            <img src="@Model.CurrentCoverImagePath" alt="目前的封面圖片" class="event-cover-preview mb-2" />
+            <div class="form-check mb-2">
+                <input asp-for="RemoveCoverImage" class="form-check-input" />
+                <label asp-for="RemoveCoverImage" class="form-check-label"></label>
+            </div>
+        }
+        <input asp-for="CoverImage" type="file" class="form-control" accept="image/jpeg,image/png,image/webp" />
+        <div class="form-text">JPG、PNG、WebP，5MB 以內@(Model.CurrentCoverImagePath is not null ? "；選擇新圖片會取代目前的封面" : "")</div>
+        <span asp-validation-for="CoverImage" class="text-danger small"></span>
+    </div>
+
+    <div class="row g-2 mb-3">
+        <div class="col-12">
+            <label asp-for="StartAt" class="form-label"></label>
+            <input asp-for="StartAt" type="datetime-local" asp-format="@dateTimeFormat" class="form-control" />
+            <span asp-validation-for="StartAt" class="text-danger small"></span>
+        </div>
+        <div class="col-12">
+            <label asp-for="EndAt" class="form-label"></label>
+            <input asp-for="EndAt" type="datetime-local" asp-format="@dateTimeFormat" class="form-control" />
+            <span asp-validation-for="EndAt" class="text-danger small"></span>
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Location" class="form-label"></label>
+        <input asp-for="Location" class="form-control" maxlength="200" placeholder="例如：台北市信義區市府路 1 號" />
+        <span asp-validation-for="Location" class="text-danger small"></span>
+    </div>
+
+    <div class="row g-2 mb-3">
+        <div class="col-6">
+            <label asp-for="Price" class="form-label"></label>
+            @if (priceLocked)
+            {
+                <input asp-for="Price" type="number" class="form-control" readonly />
+                <div class="form-text">已有人報名，不能修改</div>
+            }
+            else
+            {
+                <input asp-for="Price" type="number" inputmode="numeric" min="0" step="1" class="form-control" />
+                <div class="form-text">填 0 為免費</div>
+            }
+            <span asp-validation-for="Price" class="text-danger small"></span>
+        </div>
+        <div class="col-6">
+            <label asp-for="Capacity" class="form-label"></label>
+            <input asp-for="Capacity" type="number" inputmode="numeric" min="@Math.Max(1, Model.ReservedCount)" step="1" class="form-control" />
+            @if (Model.HasRegistrations)
+            {
+                <div class="form-text">不能少於已報名的 @Model.ReservedCount 人</div>
+            }
+            <span asp-validation-for="Capacity" class="text-danger small"></span>
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="RegistrationDeadline" class="form-label"></label>
+        <input asp-for="RegistrationDeadline" type="datetime-local" asp-format="@dateTimeFormat" class="form-control" />
+        <div class="form-text">選填，不填則活動開始前都可報名</div>
+        <span asp-validation-for="RegistrationDeadline" class="text-danger small"></span>
+    </div>
+
+    <div class="mb-4">
+        <label asp-for="Description" class="form-label"></label>
+        <textarea asp-for="Description" class="form-control" rows="6" maxlength="5000"></textarea>
+        <span asp-validation-for="Description" class="text-danger small"></span>
+    </div>
+
+    @if (!readOnly)
+    {
+        <button type="submit" class="btn btn-primary btn-lg w-100">@(Model.IsNew ? "建立活動（存為草稿）" : "儲存")</button>
+    }
+</fieldset>

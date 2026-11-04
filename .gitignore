@@ -482,3 +482,6 @@ $RECYCLE.BIN/
 
 # Vim temporary swap files
 *.swp
+
+# 使用者上傳的檔案（活動圖片等），不進版控
+src/EventHub.Web/wwwroot/uploads/

@@ -39,6 +39,11 @@ dotnet test
 - 管理員由設定檔 `AdminAccount` 指定，網站啟動時若帳號不存在就自動建立。
   開發環境預設 `admin@eventhub.local` / `Admin12345`；正式環境請以環境變數或 user-secrets 設定。
 
+### 上傳檔案
+
+活動封面圖片存在 `src/EventHub.Web/wwwroot/uploads/events/`（已排除於版控），
+可用設定 `Uploads:RootPath` 改到其他資料夾。只接受 JPG／PNG／WebP、5MB 以內，以檔案內容判斷格式。
+
 新增資料表後建立 migration：
 
 ```powershell

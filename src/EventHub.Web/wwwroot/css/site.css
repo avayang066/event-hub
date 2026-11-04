@@ -109,6 +109,71 @@ body {
   color: #6c757d;
 }
 
+/* 主辦方：我的活動列表 */
+.event-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.event-list-item {
+  display: flex;
+  gap: 12px;
+  padding: 10px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.event-list-item:active {
+  background: #f8f9fa;
+}
+
+.event-list-thumb {
+  flex: 0 0 72px;
+  height: 72px;
+  border-radius: 6px;
+  background: #e9ecef;
+  overflow: hidden;
+}
+
+.event-list-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.event-list-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.event-list-title {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 主辦方：編輯活動 */
+.event-status-panel {
+  padding: 12px;
+  border-radius: 8px;
+  background: #f8f9fa;
+}
+
+.event-cover-preview {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
 /* 手機觸控：按鈕至少 44px 高 */
 .btn-lg, .btn-block-mobile {
   min-height: 44px;
