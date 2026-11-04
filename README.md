@@ -33,6 +33,12 @@ dotnet run --project src/EventHub.Web          # http://localhost:5117
 dotnet test
 ```
 
+### 帳號
+
+- 註冊頁（`/Account/Register`）可選「報名者」或「主辦方」，不能註冊成管理員。
+- 管理員由設定檔 `AdminAccount` 指定，網站啟動時若帳號不存在就自動建立。
+  開發環境預設 `admin@eventhub.local` / `Admin12345`；正式環境請以環境變數或 user-secrets 設定。
+
 新增資料表後建立 migration：
 
 ```powershell

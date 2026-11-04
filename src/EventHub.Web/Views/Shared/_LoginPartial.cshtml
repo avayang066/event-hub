@@ -1,19 +1,33 @@
 @using EventHub.Web.Data
-@using Microsoft.AspNetCore.Identity
-@inject SignInManager<ApplicationUser> SignInManager
+@using EventHub.Web.Infrastructure
 
 <nav class="app-auth">
-    @if (SignInManager.IsSignedIn(User))
+    @if (User.Identity?.IsAuthenticated == true)
     {
-        <a class="btn btn-sm btn-link" asp-area="Identity" asp-page="/Account/Manage/Index">@User.Identity?.Name</a>
-        <form class="d-inline" asp-area="Identity" asp-page="/Account/Logout"
-              asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })" method="post">
-            <button type="submit" class="btn btn-sm btn-outline-secondary">登出</button>
-        </form>
+        <div class="dropdown">
+            <button class="btn btn-sm btn-light dropdown-toggle app-user-button" type="button"
+                    data-bs-toggle="dropdown" aria-expanded="false">
+                <span class="app-user-name">@User.GetDisplayName()</span>
+                <span class="badge text-bg-secondary">@User.GetRoleLabel()</span>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end">
+                <li><span class="dropdown-item-text small text-muted">@User.Identity.Name</span></li>
+                @if (User.IsInRole(AppRoles.Organizer))
+                {
+                    <li><a class="dropdown-item" asp-controller="Organizer" asp-action="Index">我的活動</a></li>
+                }
+                <li><hr class="dropdown-divider" /></li>
+                <li>
+                    <form asp-controller="Account" asp-action="Logout" method="post">
+                        <button type="submit" class="dropdown-item">登出</button>
+                    </form>
+                </li>
+            </ul>
+        </div>
     }
     else
     {
-        <a class="btn btn-sm btn-link" asp-area="Identity" asp-page="/Account/Login">登入</a>
-        <a class="btn btn-sm btn-primary" asp-area="Identity" asp-page="/Account/Register">註冊</a>
+        <a class="btn btn-sm btn-link" asp-controller="Account" asp-action="Login">登入</a>
+        <a class="btn btn-sm btn-primary" asp-controller="Account" asp-action="Register">註冊</a>
     }
 </nav>

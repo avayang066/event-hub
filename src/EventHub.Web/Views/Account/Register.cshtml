@@ -1,0 +1,63 @@
+@model EventHub.Web.Models.Account.RegisterViewModel
+@{
+    ViewData["Title"] = "註冊";
+}
+
+<h1 class="h4 mb-3">建立帳號</h1>
+
+<form asp-action="Register" asp-route-returnUrl="@ViewData["ReturnUrl"]" method="post" novalidate>
+    <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2" role="alert"></div>
+
+    <fieldset class="mb-3">
+        <legend class="form-label fs-6">身分</legend>
+        <div class="account-type-options">
+            <label class="account-type-card">
+                <input type="radio" asp-for="AccountType" value="@AccountType.Attendee" class="form-check-input" />
+                <span class="account-type-title">我是報名者</span>
+                <span class="account-type-desc">瀏覽活動、線上報名付款</span>
+            </label>
+            <label class="account-type-card">
+                <input type="radio" asp-for="AccountType" value="@AccountType.Organizer" class="form-check-input" />
+                <span class="account-type-title">我是主辦方</span>
+                <span class="account-type-desc">上架活動、收取報名費</span>
+            </label>
+        </div>
+        <span asp-validation-for="AccountType" class="text-danger small"></span>
+    </fieldset>
+
+    <div class="mb-3">
+        <label asp-for="DisplayName" class="form-label"></label>
+        <input asp-for="DisplayName" class="form-control" autocomplete="nickname" placeholder="主辦方請填單位或品牌名稱" />
+        <span asp-validation-for="DisplayName" class="text-danger small"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Email" class="form-label"></label>
+        <input asp-for="Email" class="form-control" type="email" inputmode="email" autocomplete="email" autocapitalize="off" />
+        <span asp-validation-for="Email" class="text-danger small"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Password" class="form-label"></label>
+        <input asp-for="Password" class="form-control" autocomplete="new-password" aria-describedby="passwordHelp" />
+        <div id="passwordHelp" class="form-text">至少 8 個字元，需包含英文字母與數字</div>
+        <span asp-validation-for="Password" class="text-danger small"></span>
+    </div>
+
+    <div class="mb-4">
+        <label asp-for="ConfirmPassword" class="form-label"></label>
+        <input asp-for="ConfirmPassword" class="form-control" autocomplete="new-password" />
+        <span asp-validation-for="ConfirmPassword" class="text-danger small"></span>
+    </div>
+
+    <button type="submit" class="btn btn-primary btn-lg w-100">註冊</button>
+</form>
+
+<p class="text-center mt-4 mb-0">
+    已經有帳號了？
+    <a asp-action="Login" asp-route-returnUrl="@ViewData["ReturnUrl"]">登入</a>
+</p>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

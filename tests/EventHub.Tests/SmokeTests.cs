@@ -6,7 +6,8 @@ public class SmokeTests(TestWebAppFactory factory) : IClassFixture<TestWebAppFac
 {
     [Theory]
     [InlineData("/")]
-    [InlineData("/Identity/Account/Login")]
+    [InlineData("/Account/Login")]
+    [InlineData("/Account/Register")]
     public async Task Page_returns_ok(string url)
     {
         var client = factory.CreateClient();
