@@ -1,0 +1,82 @@
+@using EventHub.Web.Infrastructure
+@using EventHub.Web.Services
+@model EventHub.Web.Models.Events.EventDetailViewModel
+@{
+    ViewData["Title"] = Model.Title;
+}
+
+@if (Model.IsDraftPreview)
+{
+    <div class="alert alert-warning py-2">
+        預覽模式：這是尚未上架的草稿，只有你看得到。
+    </div>
+}
+
+@if (Model.CoverImagePath is not null)
+{
+    <img src="@Model.CoverImagePath" alt="" class="event-detail-cover" />
+}
+
+<div class="d-flex align-items-start justify-content-between gap-2 mt-3">
+    <h1 class="h4 mb-0">@Model.Title</h1>
+    <span class="badge @Model.Availability.ToBadgeClass() flex-shrink-0">@Model.Availability.ToLabel()</span>
+</div>
+<div class="text-muted small mt-1">主辦：@Model.OrganizerName</div>
+
+@if (Model.IsOwner)
+{
+    <a class="btn btn-sm btn-outline-secondary mt-2" asp-controller="OrganizerEvents" asp-action="Edit" asp-route-id="@Model.Id">編輯此活動</a>
+}
+
+<dl class="event-detail-info">
+    <dt>時間</dt>
+    <dd>@EventTimeFormatter.FormatRange(Model.StartAt, Model.EndAt)</dd>
+
+    <dt>地點</dt>
+    <dd>
+        @Model.Location
+        <a class="d-block small" href="@Model.MapUrl" target="_blank" rel="noopener">在地圖上查看</a>
+    </dd>
+
+    <dt>費用</dt>
+    <dd>@Model.Price.ToPriceLabel()</dd>
+
+    <dt>名額</dt>
+    <dd>
+        共 @Model.Capacity 名
+        @if (Model.Availability is RegistrationAvailability.Open or RegistrationAvailability.Full)
+        {
+            <span class="text-muted">（剩 @Model.RemainingSeats 名）</span>
+        }
+    </dd>
+
+    <dt>報名截止</dt>
+    <dd>@EventTimeFormatter.FormatDateTime(Model.RegistrationDeadline ?? Model.StartAt)</dd>
+</dl>
+
+@if (!string.IsNullOrWhiteSpace(Model.Description))
+{
+    <h2 class="h6 mt-4">活動說明</h2>
+    @* 純文字顯示（已編碼，不會執行 HTML），保留換行 *@
+    <div class="event-detail-description">@Model.Description</div>
+}
+
+@* 底部固定的報名按鈕 *@
+<div class="event-detail-action">
+    <div>
+        <div class="fw-bold">@Model.Price.ToPriceLabel()</div>
+        @if (Model.Availability == RegistrationAvailability.Open)
+        {
+            <div class="small text-muted">剩 @Model.RemainingSeats 名</div>
+        }
+    </div>
+    @if (Model.Availability == RegistrationAvailability.Open)
+    {
+        @* TODO 第 4 步：連到報名表單 *@
+        <button type="button" class="btn btn-primary btn-lg" disabled>報名功能即將開放</button>
+    }
+    else
+    {
+        <button type="button" class="btn btn-secondary btn-lg" disabled>@Model.Availability.ToLabel()</button>
+    }
+</div>

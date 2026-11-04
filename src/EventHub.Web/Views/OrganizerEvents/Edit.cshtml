@@ -5,7 +5,10 @@
     ViewData["Title"] = "編輯活動";
 }
 
-<a class="d-inline-block mb-2 small" asp-controller="Organizer" asp-action="Index">‹ 我的活動</a>
+<div class="d-flex justify-content-between mb-2 small">
+    <a asp-controller="Organizer" asp-action="Index">‹ 我的活動</a>
+    <a asp-controller="Events" asp-action="Details" asp-route-id="@Model.Id">@(Model.Status == EventStatus.Draft ? "預覽活動頁" : "查看活動頁") ›</a>
+</div>
 
 <div class="d-flex align-items-center justify-content-between mb-3">
     <h1 class="h4 mb-0">編輯活動</h1>

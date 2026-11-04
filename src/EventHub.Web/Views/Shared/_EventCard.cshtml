@@ -1,0 +1,28 @@
+@using EventHub.Web.Infrastructure
+@using EventHub.Web.Services
+@model EventHub.Web.Models.Events.EventCardViewModel
+
+<a class="event-card" asp-controller="Events" asp-action="Details" asp-route-id="@Model.Id">
+    <div class="event-card-cover">
+        @if (Model.CoverImagePath is not null)
+        {
+            <img src="@Model.CoverImagePath" alt="" loading="lazy" />
+        }
+        @if (Model.Availability != RegistrationAvailability.Open)
+        {
+            <span class="badge @Model.Availability.ToBadgeClass() event-card-badge">@Model.Availability.ToLabel()</span>
+        }
+    </div>
+    <div class="event-card-body">
+        <div class="event-card-title">@Model.Title</div>
+        <div class="event-card-meta">@EventTimeFormatter.FormatDateTime(Model.StartAt)</div>
+        <div class="event-card-meta">@Model.Location</div>
+        <div class="d-flex justify-content-between align-items-center mt-1">
+            <span class="event-card-price">@Model.Price.ToPriceLabel()</span>
+            @if (Model.Availability == RegistrationAvailability.Open)
+            {
+                <span class="small text-muted">剩 @Model.RemainingSeats 名</span>
+            }
+        </div>
+    </div>
+</a>

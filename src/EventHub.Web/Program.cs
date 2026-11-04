@@ -66,6 +66,7 @@ builder.Services.Configure<UploadOptions>(builder.Configuration.GetSection(Uploa
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddSingleton<EventImageStorage>();
 builder.Services.AddScoped<OrganizerEventService>();
+builder.Services.AddScoped<EventQueryService>();
 
 // ---- 反向代理（ngrok / 正式環境的 Nginx）：讓 Request.Scheme / RemoteIp 正確 ----
 builder.Services.Configure<ForwardedHeadersOptions>(options =>

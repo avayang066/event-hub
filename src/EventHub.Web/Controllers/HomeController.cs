@@ -1,21 +1,17 @@
 using System.Diagnostics;
-using Microsoft.AspNetCore.Mvc;
 using EventHub.Web.Models;
+using EventHub.Web.Services;
+using Microsoft.AspNetCore.Mvc;
 
 namespace EventHub.Web.Controllers;
 
-public class HomeController : Controller
+public class HomeController(EventQueryService events) : Controller
 {
-    private readonly ILogger<HomeController> _logger;
-
-    public HomeController(ILogger<HomeController> logger)
+    /// <summary>首頁 = 活動列表；q = 搜尋標題</summary>
+    public async Task<IActionResult> Index(int page = 1, string? q = null)
     {
-        _logger = logger;
-    }
-
-    public IActionResult Index()
-    {
-        return View();
+        var model = await events.ListUpcomingAsync(page, q);
+        return View(model);
     }
 
     public IActionResult Privacy()

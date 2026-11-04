@@ -1,6 +1,71 @@
-﻿@{
-    ViewData["Title"] = "首頁";
+﻿@using EventHub.Web.Services
+@model EventHub.Web.Models.Events.EventListViewModel
+@{
+    ViewData["Title"] = Model.Keyword is null ? "活動" : $"搜尋：{Model.Keyword}";
 }
 
-<h1 class="h4">EventHub</h1>
-<p class="text-muted">活動列表之後會放在這裡。</p>
+<form class="event-search mb-3" asp-action="Index" method="get" role="search">
+    <input type="search" name="q" value="@Model.Keyword" class="form-control"
+           placeholder="搜尋活動名稱" aria-label="搜尋活動名稱"
+           maxlength="@EventQueryService.MaxKeywordLength" enterkeyhint="search" />
+    <button type="submit" class="btn btn-primary">搜尋</button>
+</form>
+
+@if (Model.Keyword is null)
+{
+    <h1 class="h4 mb-3">近期活動</h1>
+}
+else
+{
+    <div class="d-flex align-items-center justify-content-between mb-3">
+        <h1 class="h6 mb-0">「@Model.Keyword」的搜尋結果</h1>
+        <a class="small" asp-action="Index">清除搜尋</a>
+    </div>
+}
+
+@if (Model.Items.Count == 0)
+{
+    <div class="text-center text-muted py-5">
+        @if (Model.Page > 1)
+        {
+            <text>沒有更多活動了。</text>
+        }
+        else if (Model.Keyword is not null)
+        {
+            <text>找不到符合「@Model.Keyword」的活動，換個關鍵字試試。</text>
+        }
+        else
+        {
+            <text>目前沒有開放中的活動，晚點再來看看！</text>
+        }
+    </div>
+}
+else
+{
+    <div class="event-card-list">
+        @foreach (var item in Model.Items)
+        {
+            <partial name="_EventCard" model="item" />
+        }
+    </div>
+}
+
+@if (Model.HasPreviousPage || Model.HasNextPage)
+{
+    <nav class="d-flex justify-content-between mt-4" aria-label="分頁">
+        @if (Model.HasPreviousPage)
+        {
+            <a class="btn btn-outline-secondary" asp-action="Index"
+               asp-route-page="@(Model.Page - 1)" asp-route-q="@Model.Keyword">‹ 上一頁</a>
+        }
+        else
+        {
+            <span></span>
+        }
+        @if (Model.HasNextPage)
+        {
+            <a class="btn btn-outline-secondary" asp-action="Index"
+               asp-route-page="@(Model.Page + 1)" asp-route-q="@Model.Keyword">下一頁 ›</a>
+        }
+    </nav>
+}

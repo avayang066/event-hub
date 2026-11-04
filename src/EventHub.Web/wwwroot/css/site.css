@@ -109,6 +109,126 @@ body {
   color: #6c757d;
 }
 
+/* 前台：搜尋列 */
+.event-search {
+  display: flex;
+  gap: 8px;
+}
+
+.event-search .btn {
+  flex-shrink: 0;
+}
+
+/* 前台：活動卡片列表 */
+.event-card-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.event-card {
+  display: block;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  overflow: hidden;
+  color: inherit;
+  text-decoration: none;
+}
+
+.event-card:active {
+  background: #f8f9fa;
+}
+
+.event-card-cover {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  background: #e9ecef;
+}
+
+.event-card-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.event-card-badge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+}
+
+.event-card-body {
+  padding: 10px 12px 12px;
+}
+
+.event-card-title {
+  font-weight: 600;
+  font-size: 1.0625rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.event-card-meta {
+  font-size: 0.875rem;
+  color: #6c757d;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.event-card-price {
+  font-weight: 600;
+}
+
+/* 前台：活動詳情 */
+.event-detail-cover {
+  display: block;
+  width: calc(100% + 32px);
+  margin: -16px -16px 0;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+}
+
+.event-detail-info {
+  display: grid;
+  grid-template-columns: 4.5em 1fr;
+  gap: 8px 12px;
+  margin: 16px 0 0;
+  padding: 12px;
+  border-radius: 8px;
+  background: #f8f9fa;
+}
+
+.event-detail-info dt {
+  font-weight: normal;
+  color: #6c757d;
+}
+
+.event-detail-info dd {
+  margin: 0;
+}
+
+.event-detail-description {
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+/* 底部固定的報名列 */
+.event-detail-action {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 24px -16px calc(-16px - env(safe-area-inset-bottom));
+  padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+  background: #fff;
+  border-top: 1px solid #e5e7eb;
+}
+
 /* 主辦方：我的活動列表 */
 .event-list {
   display: flex;
