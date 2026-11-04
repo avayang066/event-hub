@@ -43,6 +43,8 @@ public class TestWebAppFactory : WebApplicationFactory<Program>
         builder.UseEnvironment("Testing");
         builder.UseSetting("ConnectionStrings:Default", "Server=unused");
         builder.UseSetting("Uploads:RootPath", UploadRoot);
+        // 背景排程關閉，避免在測試途中自動取消訂單；需要時由測試直接呼叫
+        builder.UseSetting("OrderExpiration:Enabled", "false");
 
         builder.ConfigureServices(services =>
         {

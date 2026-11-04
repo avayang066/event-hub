@@ -13,6 +13,7 @@ namespace EventHub.Web.Services;
 public class OrganizerEventService(
     AppDbContext db,
     EventImageStorage images,
+    OrderStateService orderState,
     TimeProvider timeProvider,
     ILogger<OrganizerEventService> logger)
 {
@@ -204,12 +205,16 @@ public class OrganizerEventService(
             : OperationResult.Fail("剛好有人報名，無法下架；如需停辦請使用「取消活動」。");
     }
 
-    /// <summary>草稿／已上架 → 已取消（不可復原）</summary>
-    public async Task<OperationResult> CancelAsync(Event entity)
+    /// <summary>
+    /// 草稿／已上架 → 已取消（不可復原）。
+    /// 先把活動改為已取消（之後就不會有新報名），再取消所有待付款訂單；已付款的訂單保留等待退款。
+    /// </summary>
+    /// <returns>結果與「需要退款的已付款訂單數」</returns>
+    public async Task<(OperationResult Result, int PaidOrdersToRefund)> CancelAsync(Event entity)
     {
         if (entity.Status == EventStatus.Cancelled)
         {
-            return OperationResult.Fail("活動已經取消了。");
+            return (OperationResult.Fail("活動已經取消了。"), 0);
         }
 
         var updated = await db.Events
@@ -218,12 +223,18 @@ public class OrganizerEventService(
                 .SetProperty(e => e.Status, EventStatus.Cancelled)
                 .SetProperty(e => e.UpdatedAt, Now));
 
-        if (updated == 1)
+        if (updated == 0)
         {
-            logger.LogInformation("活動 {EventId} 已取消（已報名 {Count} 人）", entity.Id, entity.ReservedCount);
+            return (OperationResult.Fail("活動狀態已變更，請重新整理後再試。"), 0);
         }
 
-        return updated == 1 ? OperationResult.Success() : OperationResult.Fail("活動狀態已變更，請重新整理後再試。");
+        var cancelledOrders = await orderState.CancelPendingForEventAsync(entity.Id);
+        var paidOrders = await db.Orders.CountAsync(o => o.EventId == entity.Id && o.Status == OrderStatus.Paid);
+
+        logger.LogInformation("活動 {EventId} 已取消：取消待付款訂單 {Cancelled} 筆，待退款 {Paid} 筆",
+            entity.Id, cancelledOrders, paidOrders);
+
+        return (OperationResult.Success(), paidOrders);
     }
 
     // ---------------- 共用 ----------------

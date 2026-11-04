@@ -1,0 +1,11 @@
+@{
+    ViewData["Title"] = "訂單查詢";
+}
+
+<h1 class="h4 mb-3">訂單查詢</h1>
+
+<form class="event-search" asp-action="Index" method="get">
+    <input type="search" name="q" class="form-control font-monospace" placeholder="輸入訂單編號，例如 EH2611..."
+           maxlength="20" autocapitalize="characters" aria-label="訂單編號" />
+    <button type="submit" class="btn btn-primary">查詢</button>
+</form>

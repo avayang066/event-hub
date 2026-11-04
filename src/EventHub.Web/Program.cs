@@ -69,6 +69,11 @@ builder.Services.AddScoped<OrganizerEventService>();
 builder.Services.AddScoped<EventQueryService>();
 builder.Services.AddScoped<RegistrationService>();
 builder.Services.AddScoped<OrderQueryService>();
+builder.Services.AddScoped<OrderStateService>();
+
+// ---- 背景排程：取消逾期未付款的訂單 ----
+builder.Services.Configure<OrderExpirationOptions>(builder.Configuration.GetSection(OrderExpirationOptions.SectionName));
+builder.Services.AddHostedService<ExpiredOrderCleanupService>();
 
 // ---- 反向代理（ngrok / 正式環境的 Nginx）：讓 Request.Scheme / RemoteIp 正確 ----
 builder.Services.Configure<ForwardedHeadersOptions>(options =>

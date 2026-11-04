@@ -11,6 +11,7 @@ namespace EventHub.Web.Controllers;
 [Route("Orders")]
 public class OrdersController(
     OrderQueryService orders,
+    OrderStateService orderState,
     UserManager<ApplicationUser> userManager) : Controller
 {
     private string UserId => userManager.GetUserId(User)!;
@@ -25,5 +26,23 @@ public class OrdersController(
     {
         var model = await orders.GetAsync(orderNo, UserId);
         return model is null ? NotFound() : View(model);
+    }
+
+    /// <summary>取消自己的待付款訂單</summary>
+    [HttpPost("{orderNo}/Cancel")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Cancel(string orderNo)
+    {
+        var result = await orderState.CancelByAttendeeAsync(orderNo, UserId);
+        if (result.Succeeded)
+        {
+            TempData["StatusMessage"] = "已取消報名，名額已釋出。";
+        }
+        else
+        {
+            TempData["ErrorMessage"] = string.Join(" ", result.Errors.Select(e => e.Message));
+        }
+
+        return RedirectToAction(nameof(Details), new { orderNo });
     }
 }

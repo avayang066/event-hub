@@ -106,8 +106,28 @@ public class OrganizerEventsController(
 
     [HttpPost("{id:int}/Cancel")]
     [ValidateAntiForgeryToken]
-    public Task<IActionResult> Cancel(int id) =>
-        ChangeStatus(id, events.CancelAsync, "活動已取消。");
+    public async Task<IActionResult> Cancel(int id)
+    {
+        var entity = await events.FindAsync(id, UserId);
+        if (entity is null)
+        {
+            return NotFound();
+        }
+
+        var (result, paidOrdersToRefund) = await events.CancelAsync(entity);
+        if (result.Succeeded)
+        {
+            TempData["StatusMessage"] = paidOrdersToRefund > 0
+                ? $"活動已取消。有 {paidOrdersToRefund} 筆已付款的報名需要退款，平台將協助處理。"
+                : "活動已取消。";
+        }
+        else
+        {
+            TempData["ErrorMessage"] = string.Join(" ", result.Errors.Select(e => e.Message));
+        }
+
+        return RedirectToAction(nameof(Edit), new { id });
+    }
 
     // ---------------- 共用 ----------------
 
