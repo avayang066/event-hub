@@ -267,6 +267,81 @@ public class OrderStateTests(TestWebAppFactory factory) : IClassFixture<TestWebA
         Assert.Equal(1, await GetReservedCountAsync(eventId));
     }
 
+    // ---------------- 免費報名 ----------------
+
+    [Fact]
+    public async Task Attendee_can_cancel_free_registration_before_event_starts()
+    {
+        var (organizerId, _) = await CreateUserAsync(AppRoles.Organizer);
+        var (userId, email) = await CreateUserAsync(AppRoles.Attendee);
+        var eventId = await SeedEventAsync(organizerId, reservedCount: 1, price: 0);
+        var orderNo = await SeedOrderAsync(eventId, userId, organizerId, OrderStatus.Paid, amount: 0);
+        var client = await LoginAsync(email);
+        Assert.Contains("取消報名", await client.GetStringAsync($"/Orders/{orderNo}"));
+
+        await PostCancelAsync(client, orderNo);
+
+        var order = await GetOrderAsync(orderNo);
+        Assert.Equal(OrderStatus.Cancelled, order.Status);
+        Assert.NotNull(order.CancelledAt);
+        Assert.Equal(0, await GetReservedCountAsync(eventId));
+        Assert.Contains("已取消報名", await client.GetStringAsync($"/Orders/{orderNo}"));
+    }
+
+    [Fact]
+    public async Task Free_registration_cannot_be_cancelled_after_event_starts()
+    {
+        var (organizerId, _) = await CreateUserAsync(AppRoles.Organizer);
+        var (userId, email) = await CreateUserAsync(AppRoles.Attendee);
+        var eventId = await SeedEventAsync(organizerId, reservedCount: 1, price: 0);
+        var orderNo = await SeedOrderAsync(eventId, userId, organizerId, OrderStatus.Paid, amount: 0);
+        await factory.WithDbAsync(db => db.Events
+            .Where(e => e.Id == eventId)
+            .ExecuteUpdateAsync(s => s.SetProperty(e => e.StartAt, TaiwanNow.AddMinutes(-10))));
+        var client = await LoginAsync(email);
+
+        await PostCancelAsync(client, orderNo);
+
+        Assert.Equal(OrderStatus.Paid, (await GetOrderAsync(orderNo)).Status);
+        Assert.Equal(1, await GetReservedCountAsync(eventId));
+        Assert.Contains("活動已開始，無法取消報名", await client.GetStringAsync($"/Orders/{orderNo}"));
+    }
+
+    [Fact]
+    public async Task Free_registration_cannot_be_cancelled_when_event_is_cancelled()
+    {
+        var (organizerId, _) = await CreateUserAsync(AppRoles.Organizer);
+        var (userId, _) = await CreateUserAsync(AppRoles.Attendee);
+        var eventId = await SeedEventAsync(organizerId, reservedCount: 1, price: 0);
+        var orderNo = await SeedOrderAsync(eventId, userId, organizerId, OrderStatus.Paid, amount: 0);
+        await factory.WithDbAsync(db => db.Events
+            .Where(e => e.Id == eventId)
+            .ExecuteUpdateAsync(s => s.SetProperty(e => e.Status, EventStatus.Cancelled)));
+
+        var result = await WithServiceAsync(s => s.CancelByAttendeeAsync(orderNo, userId));
+
+        Assert.False(result.Succeeded);
+        Assert.Equal(OrderStatus.Paid, (await GetOrderAsync(orderNo)).Status);
+    }
+
+    [Fact]
+    public async Task Free_registration_cannot_be_marked_refunded()
+    {
+        var (organizerId, _) = await CreateUserAsync(AppRoles.Organizer);
+        var (userId, _) = await CreateUserAsync(AppRoles.Attendee);
+        var (_, adminEmail) = await CreateUserAsync(AppRoles.Admin);
+        var eventId = await SeedEventAsync(organizerId, reservedCount: 1, price: 0);
+        var orderNo = await SeedOrderAsync(eventId, userId, organizerId, OrderStatus.Paid, amount: 0);
+        var admin = await LoginAsync(adminEmail);
+
+        Assert.DoesNotContain("標記為已退款", await admin.GetStringAsync($"/Admin/Orders/{orderNo}"));
+
+        await PostRefundAsync(admin, orderNo);
+
+        Assert.Equal(OrderStatus.Paid, (await GetOrderAsync(orderNo)).Status);
+        Assert.Equal(1, await GetReservedCountAsync(eventId));
+    }
+
     // ---------------- 我的報名列表 ----------------
 
     [Fact]
@@ -318,6 +393,33 @@ public class OrderStateTests(TestWebAppFactory factory) : IClassFixture<TestWebA
         Assert.Equal(OrderStatus.Paid, (await GetOrderAsync(paid)).Status);
         Assert.Equal(1, await GetReservedCountAsync(eventId));
         Assert.Contains("有 1 筆已付款的報名需要退款", await organizer.GetStringAsync($"/Organizer/Events/{eventId}/Edit"));
+    }
+
+    [Fact]
+    public async Task Cancelling_free_event_cancels_free_registrations_without_refund()
+    {
+        var (organizerId, organizerEmail) = await CreateUserAsync(AppRoles.Organizer);
+        var (u1, _) = await CreateUserAsync(AppRoles.Attendee);
+        var (u2, attendeeEmail) = await CreateUserAsync(AppRoles.Attendee);
+        var eventId = await SeedEventAsync(organizerId, reservedCount: 2, price: 0);
+        var free1 = await SeedOrderAsync(eventId, u1, organizerId, OrderStatus.Paid, amount: 0);
+        var free2 = await SeedOrderAsync(eventId, u2, organizerId, OrderStatus.Paid, amount: 0);
+        var organizer = await LoginAsync(organizerEmail);
+
+        await organizer.PostFormAsync($"/Organizer/Events/{eventId}/Edit", $"/Organizer/Events/{eventId}/Cancel", new());
+
+        Assert.Equal(OrderStatus.Cancelled, (await GetOrderAsync(free1)).Status);
+        Assert.Equal(OrderStatus.Cancelled, (await GetOrderAsync(free2)).Status);
+        Assert.Equal(0, await GetReservedCountAsync(eventId));
+
+        var organizerPage = await organizer.GetStringAsync($"/Organizer/Events/{eventId}/Edit");
+        Assert.Contains("活動已取消。", organizerPage);
+        Assert.DoesNotContain("需要退款", organizerPage);
+
+        var attendee = await LoginAsync(attendeeEmail);
+        var orderPage = await attendee.GetStringAsync($"/Orders/{free2}");
+        Assert.Contains("活動已取消，此筆報名一併取消", orderPage);
+        Assert.DoesNotContain("辦理退款", orderPage);
     }
 
     // ---------------- 退款 ----------------

@@ -60,7 +60,7 @@
             {
                 <hr class="my-4" />
                 <form asp-action="Cancel" asp-route-id="@Model.Id" method="post"
-                      onsubmit="return confirm('確定要取消這個活動嗎？取消後無法復原。@(Model.HasRegistrations ? $"已報名的 {Model.ReservedCount} 人需要另外處理退款。" : "")');">
+                      onsubmit="return confirm('確定要取消這個活動嗎？取消後無法復原。@(!Model.HasRegistrations ? "" : Model.Price > 0 ? $"已報名的 {Model.ReservedCount} 人需要另外處理退款。" : $"已報名的 {Model.ReservedCount} 人的報名將一併取消。")');">
                     <button type="submit" class="btn btn-outline-danger w-100">取消活動</button>
                 </form>
             }

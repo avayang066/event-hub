@@ -12,6 +12,8 @@ namespace EventHub.Web.Services;
 ///     │
 ///     └──報名者取消／逾期未付款／活動取消──► 已取消
 ///
+///   免費活動：報名即為已付款（金額 0），活動開始前報名者可自行取消、或活動取消 ──► 已取消（不需退款）
+///
 /// - 每次轉換都是「條件式 UPDATE」：只有在目前狀態符合時才會更新，
 ///   同時發生的兩個轉換（例如付款成功與逾期取消）只會有一個成功。
 /// - 進入已取消／已退款時，名額還給活動（同一交易內）。
@@ -79,18 +81,46 @@ public class OrderStateService(
 
     // ---------------- 待付款 → 已取消 ----------------
 
-    /// <summary>報名者取消自己的待付款訂單。</summary>
+    /// <summary>
+    /// 報名者取消自己的報名：
+    /// - 待付款的訂單隨時可以取消
+    /// - 免費活動的報名（已付款、金額 0）在活動開始前可以取消，不用退款
+    /// - 付費且已付款的不能自行取消，要聯絡主辦單位辦理退款
+    /// </summary>
     public async Task<OperationResult> CancelByAttendeeAsync(string orderNo, string userId)
     {
         var order = await db.Orders
             .AsNoTracking()
             .Where(o => o.OrderNo == orderNo && o.UserId == userId)
-            .Select(o => new { o.Id, o.EventId, o.Status })
+            .Select(o => new
+            {
+                o.Id,
+                o.EventId,
+                o.Status,
+                o.Amount,
+                EventStartAt = o.Event.StartAt,
+                EventCancelled = o.Event.Status == EventStatus.Cancelled,
+            })
             .FirstOrDefaultAsync();
 
         if (order is null)
         {
             return OperationResult.Fail("找不到這筆報名。");
+        }
+
+        if (order.Status == OrderStatus.Paid && order.Amount == 0)
+        {
+            if (order.EventCancelled)
+            {
+                return OperationResult.Fail("活動已取消，不需要再取消報名。");
+            }
+
+            if (order.EventStartAt <= Now)
+            {
+                return OperationResult.Fail("活動已開始，無法取消報名。");
+            }
+
+            return await CancelFreeRegistrationAsync(order.Id, order.EventId, orderNo);
         }
 
         if (order.Status != OrderStatus.Pending)
@@ -108,6 +138,32 @@ public class OrderStateService(
         }
 
         logger.LogInformation("報名者取消訂單 {OrderNo}", orderNo);
+        return OperationResult.Success();
+    }
+
+    /// <summary>免費報名（已付款、金額 0）→ 已取消，並釋放名額。</summary>
+    private async Task<OperationResult> CancelFreeRegistrationAsync(int orderId, int eventId, string orderNo)
+    {
+        var now = Now;
+        await using var tx = await db.Database.BeginTransactionAsync();
+        await LockEventAsync(eventId);
+
+        var cancelled = await db.Orders
+            .Where(o => o.Id == orderId && o.Status == OrderStatus.Paid && o.Amount == 0)
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(o => o.Status, OrderStatus.Cancelled)
+                .SetProperty(o => o.CancelledAt, now)
+                .SetProperty(o => o.UpdatedAt, now));
+
+        if (cancelled == 0)
+        {
+            return OperationResult.Fail("訂單狀態已變更，請重新整理後再試。");
+        }
+
+        await ReleaseSeatsAsync(eventId, 1);
+        await tx.CommitAsync();
+
+        logger.LogInformation("報名者取消免費報名 {OrderNo}", orderNo);
         return OperationResult.Success();
     }
 
@@ -140,17 +196,40 @@ public class OrderStateService(
         return total;
     }
 
-    /// <summary>活動取消時，取消該活動所有待付款訂單（已付款的保留，等待退款）。</summary>
+    /// <summary>
+    /// 活動取消時，一併取消不需要退款的訂單並釋放名額：
+    /// - 待付款的訂單
+    /// - 免費報名（已付款、金額 0）
+    /// 付費且已付款的訂單保留為已付款，等待管理員退款。
+    /// </summary>
     /// <returns>取消的訂單數</returns>
-    public async Task<int> CancelPendingForEventAsync(int eventId)
+    public async Task<int> CancelOrdersForEventAsync(int eventId)
     {
-        var count = await CancelPendingAsync(eventId, _ => true);
-        if (count > 0)
+        var now = Now;
+        await using var tx = await db.Database.BeginTransactionAsync();
+        await LockEventAsync(eventId);
+
+        var cancelled = await db.Orders
+            .Where(o => o.EventId == eventId
+                && (o.Status == OrderStatus.Pending || (o.Status == OrderStatus.Paid && o.Amount == 0)))
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(o => o.Status, OrderStatus.Cancelled)
+                .SetProperty(o => o.CancelledAt, now)
+                .SetProperty(o => o.UpdatedAt, now));
+
+        if (cancelled > 0)
         {
-            logger.LogInformation("活動 {EventId} 取消，連帶取消 {Count} 筆待付款訂單", eventId, count);
+            await ReleaseSeatsAsync(eventId, cancelled);
         }
 
-        return count;
+        await tx.CommitAsync();
+
+        if (cancelled > 0)
+        {
+            logger.LogInformation("活動 {EventId} 取消，連帶取消 {Count} 筆待付款訂單與免費報名", eventId, cancelled);
+        }
+
+        return cancelled;
     }
 
     // ---------------- 已付款 → 已退款 ----------------
@@ -174,6 +253,11 @@ public class OrderStateService(
         if (order.Status != OrderStatus.Paid)
         {
             return OperationResult.Fail("只有已付款的訂單可以標記為已退款。");
+        }
+
+        if (order.Amount == 0)
+        {
+            return OperationResult.Fail("免費報名沒有款項可以退。");
         }
 
         var now = Now;

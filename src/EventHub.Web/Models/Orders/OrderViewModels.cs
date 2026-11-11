@@ -26,6 +26,9 @@ public class OrderDetailViewModel
     public string EventLocation { get; init; } = "";
     public bool EventCancelled { get; init; }
 
+    /// <summary>活動已開始（或已結束）</summary>
+    public bool EventStarted { get; init; }
+
     public string AttendeeName { get; init; } = "";
     public string AttendeePhone { get; init; } = "";
     public string AttendeeEmail { get; init; } = "";
@@ -40,8 +43,16 @@ public class OrderDetailViewModel
 
     public bool IsAwaitingPayment => Status == OrderDisplayStatus.AwaitingPayment;
 
-    /// <summary>待付款（含已逾期但尚未被排程取消）的訂單，報名者可以自行取消</summary>
-    public bool CanCancel => Status is OrderDisplayStatus.AwaitingPayment or OrderDisplayStatus.PaymentExpired;
+    public bool IsFree => Amount == 0;
+
+    /// <summary>
+    /// 報名者可以自行取消：
+    /// - 待付款（含已逾期但尚未被排程取消）
+    /// - 免費報名，且活動還沒開始、沒有取消
+    /// </summary>
+    public bool CanCancel =>
+        Status is OrderDisplayStatus.AwaitingPayment or OrderDisplayStatus.PaymentExpired
+        || (Status == OrderDisplayStatus.Paid && IsFree && !EventCancelled && !EventStarted);
 }
 
 /// <summary>管理員看的訂單詳情：多了會員、主辦方、金額拆分與綠界交易資訊。</summary>
@@ -59,7 +70,8 @@ public class AdminOrderDetailViewModel
     /// <summary>這張訂單收到的綠界付款通知（依收到時間排序）</summary>
     public IReadOnlyList<PaymentNotificationItemViewModel> PaymentNotifications { get; init; } = [];
 
-    public bool CanMarkRefunded => Order.Status == OrderDisplayStatus.Paid;
+    /// <summary>已付款的付費訂單才有款項可退（免費報名不需要退款）</summary>
+    public bool CanMarkRefunded => Order.Status == OrderDisplayStatus.Paid && !Order.IsFree;
 
     /// <summary>有重複付款、取消後才付款等需要人工處理的通知</summary>
     public bool HasPaymentIssue => PaymentNotifications.Any(n => PaymentProcessResult.NeedsAttention(n.ProcessResult));

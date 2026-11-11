@@ -207,7 +207,7 @@ public class OrganizerEventService(
 
     /// <summary>
     /// 草稿／已上架 → 已取消（不可復原）。
-    /// 先把活動改為已取消（之後就不會有新報名），再取消所有待付款訂單；已付款的訂單保留等待退款。
+    /// 先把活動改為已取消（之後就不會有新報名），再取消待付款訂單與免費報名；付費且已付款的訂單保留等待退款。
     /// </summary>
     /// <returns>結果與「需要退款的已付款訂單數」</returns>
     public async Task<(OperationResult Result, int PaidOrdersToRefund)> CancelAsync(Event entity)
@@ -228,10 +228,12 @@ public class OrganizerEventService(
             return (OperationResult.Fail("活動狀態已變更，請重新整理後再試。"), 0);
         }
 
-        var cancelledOrders = await orderState.CancelPendingForEventAsync(entity.Id);
-        var paidOrders = await db.Orders.CountAsync(o => o.EventId == entity.Id && o.Status == OrderStatus.Paid);
+        var cancelledOrders = await orderState.CancelOrdersForEventAsync(entity.Id);
+        // 免費報名已在上一步取消；剩下的已付款訂單都有實際付款，需要退款
+        var paidOrders = await db.Orders.CountAsync(o =>
+            o.EventId == entity.Id && o.Status == OrderStatus.Paid && o.Amount > 0);
 
-        logger.LogInformation("活動 {EventId} 已取消：取消待付款訂單 {Cancelled} 筆，待退款 {Paid} 筆",
+        logger.LogInformation("活動 {EventId} 已取消：取消待付款與免費報名 {Cancelled} 筆，待退款 {Paid} 筆",
             entity.Id, cancelledOrders, paidOrders);
 
         return (OperationResult.Success(), paidOrders);

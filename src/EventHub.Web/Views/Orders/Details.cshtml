@@ -130,17 +130,17 @@
 <div class="mt-4 text-end">
     @if (Model.CanCancel)
     {
+        if (Model.IsFree && Model.Status == OrderDisplayStatus.Paid)
+        {
+            <p class="small text-muted mb-2">無法參加的話，活動開始前都可以取消報名，把名額讓給其他人。</p>
+        }
         <form asp-action="Cancel" asp-route-orderNo="@Model.OrderNo" method="post" class="d-inline"
               onsubmit="return confirm('確定要取消這筆報名嗎？名額將會釋出給其他人。');">
             <button type="submit" class="btn btn-outline-danger">取消報名</button>
         </form>
     }
-    else if (Model.Status == OrderDisplayStatus.Paid && Model.Amount > 0 && !Model.EventCancelled)
+    else if (Model.Status == OrderDisplayStatus.Paid && !Model.IsFree && !Model.EventCancelled)
     {
         <p class="small text-muted mb-0">已付款的報名無法自行取消，如需取消並退款，請聯絡主辦單位。</p>
-    }
-    else if (Model.Status == OrderDisplayStatus.Paid && Model.Amount == 0 && !Model.EventCancelled)
-    {
-        <p class="small text-muted mb-0">如無法參加，請聯絡主辦單位。</p>
     }
 </div>

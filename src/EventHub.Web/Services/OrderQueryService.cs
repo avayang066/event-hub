@@ -103,17 +103,20 @@ public class OrderQueryService(AppDbContext db, TimeProvider timeProvider)
         };
     }
 
-    private OrderDetailViewModel ToDetail(Data.Entities.Order o) =>
-        new()
+    private OrderDetailViewModel ToDetail(Data.Entities.Order o)
+    {
+        var now = timeProvider.GetTaiwanNow();
+        return new()
         {
             OrderNo = o.OrderNo,
-            Status = OrderStatusDisplay.Get(o.Status, o.ExpiresAt, timeProvider.GetTaiwanNow()),
+            Status = OrderStatusDisplay.Get(o.Status, o.ExpiresAt, now),
             EventId = o.EventId,
             EventTitle = o.Event.Title,
             EventStartAt = o.Event.StartAt,
             EventEndAt = o.Event.EndAt,
             EventLocation = o.Event.Location,
             EventCancelled = o.Event.Status == Data.Entities.EventStatus.Cancelled,
+            EventStarted = o.Event.StartAt <= now,
             AttendeeName = o.AttendeeName,
             AttendeePhone = o.AttendeePhone,
             AttendeeEmail = o.AttendeeEmail,
@@ -125,4 +128,5 @@ public class OrderQueryService(AppDbContext db, TimeProvider timeProvider)
             CancelledAt = o.CancelledAt,
             RefundedAt = o.RefundedAt,
         };
+    }
 }
