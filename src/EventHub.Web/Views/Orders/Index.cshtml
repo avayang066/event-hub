@@ -3,20 +3,23 @@
 @model List<EventHub.Web.Models.Orders.OrderListItemViewModel>
 @{
     ViewData["Title"] = "我的報名";
+    ViewData["PageWidth"] = "medium";
 }
 
-<h1 class="h4 mb-3">我的報名</h1>
+<div class="page-header">
+    <h1 class="h3">我的報名</h1>
+</div>
 
 @if (Model.Count == 0)
 {
-    <div class="text-center text-muted py-5">
+    <div class="empty-state">
         <p class="mb-3">還沒有報名任何活動。</p>
         <a class="btn btn-outline-primary" asp-controller="Home" asp-action="Index">去看看活動</a>
     </div>
 }
 else
 {
-    <ul class="list-unstyled event-list">
+    <ul class="event-list">
         @foreach (var o in Model)
         {
             <li>

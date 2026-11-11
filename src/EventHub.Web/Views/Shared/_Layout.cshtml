@@ -1,9 +1,14 @@
-﻿<!DOCTYPE html>
+﻿@using EventHub.Web.Data
+@{
+    // 每個頁面可設定 ViewData["PageWidth"] = "wide" | "medium" | "narrow"，預設 wide
+    var pageWidth = ViewData["PageWidth"] as string ?? "wide";
+}
+<!DOCTYPE html>
 <html lang="zh-Hant-TW">
 <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="theme-color" content="#ffffff" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#faf7f2" />
     <title>@ViewData["Title"] - EventHub</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
@@ -12,14 +17,37 @@
 <body>
     <div class="app-shell">
         <header class="app-header">
-            <a class="app-brand" asp-area="" asp-controller="Home" asp-action="Index">EventHub</a>
-            <partial name="_LoginPartial" />
+            <div class="app-header-inner">
+                <a class="app-brand" asp-area="" asp-controller="Home" asp-action="Index">EventHub<span class="app-brand-dot">.</span></a>
+
+                <nav class="app-nav" aria-label="主要導覽">
+                    <a asp-controller="Home" asp-action="Index">活動</a>
+                    @if (User.IsInRole(AppRoles.Attendee))
+                    {
+                        <a asp-controller="Orders" asp-action="Index">我的報名</a>
+                    }
+                    @if (User.IsInRole(AppRoles.Organizer))
+                    {
+                        <a asp-controller="Organizer" asp-action="Index">我的活動</a>
+                    }
+                    @if (User.IsInRole(AppRoles.Admin))
+                    {
+                        <a asp-controller="AdminOrders" asp-action="Index">訂單查詢</a>
+                    }
+                </nav>
+
+                <partial name="_LoginPartial" />
+            </div>
         </header>
 
-        <main role="main" class="app-main">
+        <main role="main" class="app-main page-@pageWidth">
             <partial name="_StatusMessage" />
             @RenderBody()
         </main>
+
+        <footer class="app-footer">
+            &copy; @DateTime.Now.Year EventHub
+        </footer>
     </div>
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>

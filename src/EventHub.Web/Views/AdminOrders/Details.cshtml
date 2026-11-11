@@ -3,103 +3,125 @@
 @model EventHub.Web.Models.Orders.AdminOrderDetailViewModel
 @{
     ViewData["Title"] = $"訂單 {Model.Order.OrderNo}";
+    ViewData["PageWidth"] = "medium";
     var o = Model.Order;
 }
 
-<a class="d-inline-block mb-2 small" asp-action="Index">‹ 訂單查詢</a>
+<a class="back-link" asp-action="Index">‹ 訂單查詢</a>
 
-<div class="d-flex align-items-center justify-content-between mb-3">
-    <h1 class="h5 mb-0 font-monospace">@o.OrderNo</h1>
-    <span class="badge @o.Status.ToBadgeClass() fs-6">@o.Status.ToLabel()</span>
+<div class="page-header">
+    <div class="d-flex align-items-center gap-3">
+        <h1 class="h4 font-monospace">@o.OrderNo</h1>
+        <span class="badge @o.Status.ToBadgeClass()">@o.Status.ToLabel()</span>
+    </div>
 </div>
 
 @if (o.EventCancelled)
 {
-    <div class="alert alert-danger py-2">此活動已取消。</div>
+    <div class="alert alert-danger">此活動已取消。</div>
 }
 
-<dl class="event-detail-info">
-    <dt>活動</dt>
-    <dd><a asp-controller="Events" asp-action="Details" asp-route-id="@o.EventId">@o.EventTitle</a></dd>
+<div class="row g-4">
+    <div class="col-md-6">
+        <div class="panel h-100">
+            <h2 class="section-title mt-0">活動</h2>
+            <dl class="event-detail-info">
+                <dt>活動</dt>
+                <dd><a asp-controller="Events" asp-action="Details" asp-route-id="@o.EventId">@o.EventTitle</a></dd>
 
-    <dt>活動時間</dt>
-    <dd>@EventTimeFormatter.FormatRange(o.EventStartAt, o.EventEndAt)</dd>
+                <dt>活動時間</dt>
+                <dd>@EventTimeFormatter.FormatRange(o.EventStartAt, o.EventEndAt)</dd>
 
-    <dt>主辦方</dt>
-    <dd>@Model.OrganizerName</dd>
-</dl>
+                <dt>主辦方</dt>
+                <dd>@Model.OrganizerName</dd>
+            </dl>
+        </div>
+    </div>
 
-<h2 class="h6 mt-4">報名者</h2>
-<dl class="event-detail-info">
-    <dt>會員帳號</dt>
-    <dd class="text-break">@Model.UserEmail</dd>
+    <div class="col-md-6">
+        <div class="panel h-100">
+            <h2 class="section-title mt-0">報名者</h2>
+            <dl class="event-detail-info">
+                <dt>會員帳號</dt>
+                <dd class="text-break">@Model.UserEmail</dd>
 
-    <dt>姓名</dt>
-    <dd>@o.AttendeeName</dd>
+                <dt>姓名</dt>
+                <dd>@o.AttendeeName</dd>
 
-    <dt>手機</dt>
-    <dd>@o.AttendeePhone</dd>
+                <dt>手機</dt>
+                <dd>@o.AttendeePhone</dd>
 
-    <dt>Email</dt>
-    <dd class="text-break">@o.AttendeeEmail</dd>
-</dl>
+                <dt>Email</dt>
+                <dd class="text-break">@o.AttendeeEmail</dd>
+            </dl>
+        </div>
+    </div>
 
-<h2 class="h6 mt-4">金額</h2>
-<dl class="event-detail-info">
-    <dt>實收</dt>
-    <dd>@o.Amount.ToPriceLabel()</dd>
+    <div class="col-md-6">
+        <div class="panel h-100">
+            <h2 class="section-title mt-0">金額</h2>
+            <dl class="event-detail-info">
+                <dt>實收</dt>
+                <dd>@o.Amount.ToPriceLabel()</dd>
 
-    <dt>手續費</dt>
-    <dd>NT$ @Model.PlatformFee.ToString("N0")</dd>
+                <dt>手續費</dt>
+                <dd>NT$ @Model.PlatformFee.ToString("N0")</dd>
 
-    <dt>應撥主辦</dt>
-    <dd>NT$ @Model.OrganizerAmount.ToString("N0")</dd>
+                <dt>應撥主辦</dt>
+                <dd>NT$ @Model.OrganizerAmount.ToString("N0")</dd>
 
-    @if (Model.RefundAmount is not null)
-    {
-        <dt>已退款</dt>
-        <dd>NT$ @Model.RefundAmount.Value.ToString("N0")</dd>
-    }
-</dl>
+                @if (Model.RefundAmount is not null)
+                {
+                    <dt>已退款</dt>
+                    <dd>NT$ @Model.RefundAmount.Value.ToString("N0")</dd>
+                }
+            </dl>
+        </div>
+    </div>
 
-<h2 class="h6 mt-4">付款</h2>
-<dl class="event-detail-info">
-    <dt>綠界交易</dt>
-    <dd class="font-monospace">@(Model.EcpayTradeNo ?? "—")</dd>
+    <div class="col-md-6">
+        <div class="panel h-100">
+            <h2 class="section-title mt-0">付款</h2>
+            <dl class="event-detail-info">
+                <dt>綠界交易</dt>
+                <dd class="font-monospace">@(Model.EcpayTradeNo ?? "—")</dd>
 
-    <dt>付款方式</dt>
-    <dd>@(Model.PaymentType ?? "—")</dd>
+                <dt>付款方式</dt>
+                <dd>@(Model.PaymentType ?? "—")</dd>
 
-    <dt>報名時間</dt>
-    <dd>@EventTimeFormatter.FormatDateTime(o.CreatedAt)</dd>
+                <dt>報名時間</dt>
+                <dd>@EventTimeFormatter.FormatDateTime(o.CreatedAt)</dd>
 
-    @if (o.PaidAt is not null)
-    {
-        <dt>付款時間</dt>
-        <dd>@EventTimeFormatter.FormatDateTime(o.PaidAt.Value)</dd>
-    }
-    @if (o.CancelledAt is not null)
-    {
-        <dt>取消時間</dt>
-        <dd>@EventTimeFormatter.FormatDateTime(o.CancelledAt.Value)</dd>
-    }
-    @if (o.RefundedAt is not null)
-    {
-        <dt>退款時間</dt>
-        <dd>@EventTimeFormatter.FormatDateTime(o.RefundedAt.Value)</dd>
-    }
-</dl>
+                @if (o.PaidAt is not null)
+                {
+                    <dt>付款時間</dt>
+                    <dd>@EventTimeFormatter.FormatDateTime(o.PaidAt.Value)</dd>
+                }
+                @if (o.CancelledAt is not null)
+                {
+                    <dt>取消時間</dt>
+                    <dd>@EventTimeFormatter.FormatDateTime(o.CancelledAt.Value)</dd>
+                }
+                @if (o.RefundedAt is not null)
+                {
+                    <dt>退款時間</dt>
+                    <dd>@EventTimeFormatter.FormatDateTime(o.RefundedAt.Value)</dd>
+                }
+            </dl>
+        </div>
+    </div>
+</div>
 
 @if (Model.CanMarkRefunded)
 {
-    <div class="event-status-panel mt-4">
-        <p class="small mb-2">
-            請先到<strong>綠界廠商後台</strong>完成退款（全額 @o.Amount.ToPriceLabel()），再按下方按鈕更新訂單狀態。
+    <div class="event-status-panel mt-4 d-flex align-items-center justify-content-between gap-4 flex-wrap">
+        <p class="small mb-0">
+            請先到<strong>綠界廠商後台</strong>完成退款（全額 @o.Amount.ToPriceLabel()），再按右方按鈕更新訂單狀態。
             標記後名額會釋出，且無法復原。
         </p>
         <form asp-action="Refund" asp-route-orderNo="@o.OrderNo" method="post"
               onsubmit="return confirm('確認已在綠界後台完成退款，要標記為已退款嗎？');">
-            <button type="submit" class="btn btn-danger w-100">標記為已退款</button>
+            <button type="submit" class="btn btn-danger">標記為已退款</button>
         </form>
     </div>
 }

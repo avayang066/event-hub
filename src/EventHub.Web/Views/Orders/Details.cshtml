@@ -3,13 +3,16 @@
 @model EventHub.Web.Models.Orders.OrderDetailViewModel
 @{
     ViewData["Title"] = "報名明細";
+    ViewData["PageWidth"] = "medium";
 }
 
-<a class="d-inline-block mb-2 small" asp-action="Index">‹ 我的報名</a>
+<a class="back-link" asp-action="Index">‹ 我的報名</a>
 
-<div class="d-flex align-items-center justify-content-between mb-3">
-    <h1 class="h4 mb-0">報名明細</h1>
-    <span class="badge @Model.Status.ToBadgeClass() fs-6">@Model.Status.ToLabel()</span>
+<div class="page-header">
+    <div class="d-flex align-items-center gap-3">
+        <h1 class="h3">報名明細</h1>
+        <span class="badge @Model.Status.ToBadgeClass()">@Model.Status.ToLabel()</span>
+    </div>
 </div>
 
 @switch (Model.Status)
@@ -38,84 +41,102 @@
         break;
 }
 
-<dl class="event-detail-info">
-    <dt>活動</dt>
-    <dd><a asp-controller="Events" asp-action="Details" asp-route-id="@Model.EventId">@Model.EventTitle</a></dd>
-
-    <dt>時間</dt>
-    <dd>@EventTimeFormatter.FormatRange(Model.EventStartAt, Model.EventEndAt)</dd>
-
-    <dt>地點</dt>
-    <dd>@Model.EventLocation</dd>
-
-    <dt>金額</dt>
-    <dd>@Model.Amount.ToPriceLabel()</dd>
-</dl>
-
-<h2 class="h6 mt-4">報名資料</h2>
-<dl class="event-detail-info">
-    <dt>姓名</dt>
-    <dd>@Model.AttendeeName</dd>
-
-    <dt>手機</dt>
-    <dd>@Model.AttendeePhone</dd>
-
-    <dt>Email</dt>
-    <dd class="text-break">@Model.AttendeeEmail</dd>
-
-    @if (Model.Note is not null)
-    {
-        <dt>備註</dt>
-        <dd class="event-detail-description">@Model.Note</dd>
-    }
-</dl>
-
-<h2 class="h6 mt-4">訂單資訊</h2>
-<dl class="event-detail-info">
-    <dt>訂單編號</dt>
-    <dd class="font-monospace">@Model.OrderNo</dd>
-
-    <dt>報名時間</dt>
-    <dd>@EventTimeFormatter.FormatDateTime(Model.CreatedAt)</dd>
-
-    @if (Model.PaidAt is not null && Model.Amount > 0)
-    {
-        <dt>付款時間</dt>
-        <dd>@EventTimeFormatter.FormatDateTime(Model.PaidAt.Value)</dd>
-    }
-    @if (Model.CancelledAt is not null)
-    {
-        <dt>取消時間</dt>
-        <dd>@EventTimeFormatter.FormatDateTime(Model.CancelledAt.Value)</dd>
-    }
-    @if (Model.RefundedAt is not null)
-    {
-        <dt>退款時間</dt>
-        <dd>@EventTimeFormatter.FormatDateTime(Model.RefundedAt.Value)</dd>
-    }
-</dl>
-
-@if (Model.CanCancel)
-{
-    <form asp-action="Cancel" asp-route-orderNo="@Model.OrderNo" method="post" class="mt-4"
-          onsubmit="return confirm('確定要取消這筆報名嗎？名額將會釋出給其他人。');">
-        <button type="submit" class="btn btn-outline-danger w-100">取消報名</button>
-    </form>
-}
-else if (Model.Status == OrderDisplayStatus.Paid && Model.Amount > 0 && !Model.EventCancelled)
-{
-    <p class="small text-muted mt-4 mb-0">已付款的報名無法自行取消，如需取消並退款，請聯絡主辦單位。</p>
-}
-else if (Model.Status == OrderDisplayStatus.Paid && Model.Amount == 0 && !Model.EventCancelled)
-{
-    <p class="small text-muted mt-4 mb-0">如無法參加，請聯絡主辦單位。</p>
-}
-
 @if (Model.IsAwaitingPayment)
 {
-    <div class="event-detail-action">
-        <div class="fw-bold">@Model.Amount.ToPriceLabel()</div>
+    <div class="event-detail-action mb-4">
+        <div>
+            <div class="text-muted small">應付金額</div>
+            <div class="detail-price">@Model.Amount.ToPriceLabel()</div>
+        </div>
         @* TODO 第 5 步：送出綠界結帳 *@
         <button type="button" class="btn btn-primary btn-lg" disabled>付款功能即將開放</button>
     </div>
 }
+
+<div class="panel mb-4">
+    <h2 class="section-title mt-0">活動</h2>
+    <dl class="event-detail-info">
+        <dt>活動</dt>
+        <dd><a asp-controller="Events" asp-action="Details" asp-route-id="@Model.EventId">@Model.EventTitle</a></dd>
+
+        <dt>時間</dt>
+        <dd>@EventTimeFormatter.FormatRange(Model.EventStartAt, Model.EventEndAt)</dd>
+
+        <dt>地點</dt>
+        <dd>@Model.EventLocation</dd>
+
+        <dt>金額</dt>
+        <dd>@Model.Amount.ToPriceLabel()</dd>
+    </dl>
+</div>
+
+<div class="row g-4">
+    <div class="col-md-6">
+        <div class="panel h-100">
+            <h2 class="section-title mt-0">報名資料</h2>
+            <dl class="event-detail-info">
+                <dt>姓名</dt>
+                <dd>@Model.AttendeeName</dd>
+
+                <dt>手機</dt>
+                <dd>@Model.AttendeePhone</dd>
+
+                <dt>Email</dt>
+                <dd class="text-break">@Model.AttendeeEmail</dd>
+
+                @if (Model.Note is not null)
+                {
+                    <dt>備註</dt>
+                    <dd class="event-detail-description">@Model.Note</dd>
+                }
+            </dl>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="panel h-100">
+            <h2 class="section-title mt-0">訂單資訊</h2>
+            <dl class="event-detail-info">
+                <dt>訂單編號</dt>
+                <dd class="font-monospace">@Model.OrderNo</dd>
+
+                <dt>報名時間</dt>
+                <dd>@EventTimeFormatter.FormatDateTime(Model.CreatedAt)</dd>
+
+                @if (Model.PaidAt is not null && Model.Amount > 0)
+                {
+                    <dt>付款時間</dt>
+                    <dd>@EventTimeFormatter.FormatDateTime(Model.PaidAt.Value)</dd>
+                }
+                @if (Model.CancelledAt is not null)
+                {
+                    <dt>取消時間</dt>
+                    <dd>@EventTimeFormatter.FormatDateTime(Model.CancelledAt.Value)</dd>
+                }
+                @if (Model.RefundedAt is not null)
+                {
+                    <dt>退款時間</dt>
+                    <dd>@EventTimeFormatter.FormatDateTime(Model.RefundedAt.Value)</dd>
+                }
+            </dl>
+        </div>
+    </div>
+</div>
+
+<div class="mt-4 text-end">
+    @if (Model.CanCancel)
+    {
+        <form asp-action="Cancel" asp-route-orderNo="@Model.OrderNo" method="post" class="d-inline"
+              onsubmit="return confirm('確定要取消這筆報名嗎？名額將會釋出給其他人。');">
+            <button type="submit" class="btn btn-outline-danger">取消報名</button>
+        </form>
+    }
+    else if (Model.Status == OrderDisplayStatus.Paid && Model.Amount > 0 && !Model.EventCancelled)
+    {
+        <p class="small text-muted mb-0">已付款的報名無法自行取消，如需取消並退款，請聯絡主辦單位。</p>
+    }
+    else if (Model.Status == OrderDisplayStatus.Paid && Model.Amount == 0 && !Model.EventCancelled)
+    {
+        <p class="small text-muted mb-0">如無法參加，請聯絡主辦單位。</p>
+    }
+</div>

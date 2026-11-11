@@ -1,14 +1,20 @@
 @model EventHub.Web.Models.Organizer.EventFormViewModel
 @{
     ViewData["Title"] = "新增活動";
+    ViewData["PageWidth"] = "medium";
 }
 
-<a class="d-inline-block mb-2 small" asp-controller="Organizer" asp-action="Index">‹ 我的活動</a>
-<h1 class="h4 mb-3">新增活動</h1>
+<a class="back-link" asp-controller="Organizer" asp-action="Index">‹ 我的活動</a>
 
-<form asp-action="Create" method="post" enctype="multipart/form-data" novalidate>
-    <partial name="_EventForm" model="Model" />
-</form>
+<div class="page-header">
+    <h1 class="h3">新增活動</h1>
+</div>
+
+<div class="panel">
+    <form asp-action="Create" method="post" enctype="multipart/form-data" novalidate>
+        <partial name="_EventForm" model="Model" />
+    </form>
+</div>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />

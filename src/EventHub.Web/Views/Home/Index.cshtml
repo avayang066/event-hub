@@ -4,28 +4,30 @@
     ViewData["Title"] = Model.Keyword is null ? "活動" : $"搜尋：{Model.Keyword}";
 }
 
-<form class="event-search mb-3" asp-action="Index" method="get" role="search">
-    <input type="search" name="q" value="@Model.Keyword" class="form-control"
-           placeholder="搜尋活動名稱" aria-label="搜尋活動名稱"
-           maxlength="@EventQueryService.MaxKeywordLength" enterkeyhint="search" />
-    <button type="submit" class="btn btn-primary">搜尋</button>
-</form>
-
-@if (Model.Keyword is null)
-{
-    <h1 class="h4 mb-3">近期活動</h1>
-}
-else
-{
-    <div class="d-flex align-items-center justify-content-between mb-3">
-        <h1 class="h6 mb-0">「@Model.Keyword」的搜尋結果</h1>
-        <a class="small" asp-action="Index">清除搜尋</a>
+<div class="page-header">
+    <div>
+        @if (Model.Keyword is null)
+        {
+            <h1 class="h3">近期活動</h1>
+        }
+        else
+        {
+            <h1 class="h4">「@Model.Keyword」的搜尋結果</h1>
+            <a class="small" asp-action="Index">清除搜尋</a>
+        }
     </div>
-}
+
+    <form class="event-search" asp-action="Index" method="get" role="search">
+        <input type="search" name="q" value="@Model.Keyword" class="form-control"
+               placeholder="搜尋活動名稱" aria-label="搜尋活動名稱"
+               maxlength="@EventQueryService.MaxKeywordLength" enterkeyhint="search" />
+        <button type="submit" class="btn btn-primary">搜尋</button>
+    </form>
+</div>
 
 @if (Model.Items.Count == 0)
 {
-    <div class="text-center text-muted py-5">
+    <div class="empty-state">
         @if (Model.Page > 1)
         {
             <text>沒有更多活動了。</text>
@@ -52,7 +54,7 @@ else
 
 @if (Model.HasPreviousPage || Model.HasNextPage)
 {
-    <nav class="d-flex justify-content-between mt-4" aria-label="分頁">
+    <nav class="pager" aria-label="分頁">
         @if (Model.HasPreviousPage)
         {
             <a class="btn btn-outline-secondary" asp-action="Index"

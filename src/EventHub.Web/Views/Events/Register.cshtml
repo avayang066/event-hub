@@ -3,9 +3,12 @@
 @model EventHub.Web.Models.Registration.RegistrationFormViewModel
 @{
     ViewData["Title"] = "報名";
+    ViewData["PageWidth"] = "narrow";
 }
 
-<a class="d-inline-block mb-2 small" asp-action="Details" asp-route-id="@Model.EventId">‹ 回活動頁</a>
+<a class="back-link" asp-action="Details" asp-route-id="@Model.EventId">‹ 回活動頁</a>
+
+<div class="panel">
 <h1 class="h4 mb-3">報名</h1>
 
 @* 活動摘要 *@
@@ -55,6 +58,7 @@
         @(Model.Price > 0 ? "送出報名並前往付款" : "送出報名")
     </button>
 </form>
+</div>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />

@@ -3,23 +3,24 @@
 @model List<Event>
 @{
     ViewData["Title"] = "我的活動";
+    ViewData["PageWidth"] = "medium";
 }
 
-<div class="d-flex align-items-center justify-content-between mb-3">
-    <h1 class="h4 mb-0">我的活動</h1>
+<div class="page-header">
+    <h1 class="h3">我的活動</h1>
     <a class="btn btn-primary" asp-controller="OrganizerEvents" asp-action="Create">＋ 新增活動</a>
 </div>
 
 @if (Model.Count == 0)
 {
-    <div class="text-center text-muted py-5">
+    <div class="empty-state">
         <p class="mb-3">還沒有活動。</p>
         <a class="btn btn-outline-primary" asp-controller="OrganizerEvents" asp-action="Create">建立第一個活動</a>
     </div>
 }
 else
 {
-    <ul class="list-unstyled event-list">
+    <ul class="event-list">
         @foreach (var e in Model)
         {
             <li>
@@ -35,7 +36,7 @@ else
                             <span class="event-list-title">@e.Title</span>
                             <span class="badge @e.Status.ToBadgeClass()">@e.Status.ToLabel()</span>
                         </div>
-                        <div class="small text-muted">@e.StartAt.ToString("yyyy/MM/dd (ddd) HH:mm")</div>
+                        <div class="small text-muted">@EventTimeFormatter.FormatDateTime(e.StartAt)</div>
                         <div class="small">
                             @e.Price.ToPriceLabel()
                             <span class="text-muted">・</span>

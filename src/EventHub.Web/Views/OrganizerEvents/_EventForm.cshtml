@@ -30,13 +30,13 @@
         <span asp-validation-for="CoverImage" class="text-danger small"></span>
     </div>
 
-    <div class="row g-2 mb-3">
-        <div class="col-12">
+    <div class="row g-3 mb-3">
+        <div class="col-md-6">
             <label asp-for="StartAt" class="form-label"></label>
             <input asp-for="StartAt" type="datetime-local" asp-format="@dateTimeFormat" class="form-control" />
             <span asp-validation-for="StartAt" class="text-danger small"></span>
         </div>
-        <div class="col-12">
+        <div class="col-md-6">
             <label asp-for="EndAt" class="form-label"></label>
             <input asp-for="EndAt" type="datetime-local" asp-format="@dateTimeFormat" class="form-control" />
             <span asp-validation-for="EndAt" class="text-danger small"></span>
@@ -49,7 +49,7 @@
         <span asp-validation-for="Location" class="text-danger small"></span>
     </div>
 
-    <div class="row g-2 mb-3">
+    <div class="row g-3 mb-3">
         <div class="col-6">
             <label asp-for="Price" class="form-label"></label>
             @if (priceLocked)

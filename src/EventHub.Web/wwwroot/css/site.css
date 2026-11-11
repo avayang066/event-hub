@@ -1,24 +1,83 @@
-/* 手機版優先：內容最寬 480px 置中，桌機瀏覽也維持手機版面 */
+/* =========================================================
+   EventHub — 暖色、簡約、桌機優先（小螢幕自動縮為單欄）
+   顏色、圓角集中在 :root，改風格只要改這裡
+   ========================================================= */
+
 :root {
-  --app-max-width: 480px;
-  --app-header-height: 56px;
+  /* 底色與文字 */
+  --c-bg: #faf7f2;
+  --c-surface: #ffffff;
+  --c-surface-soft: #f5efe7;
+  --c-border: #e9e1d6;
+  --c-text: #2e2924;
+  --c-muted: #8a7f74;
+
+  /* 主色：陶土橘 */
+  --c-primary: #c0673f;
+  --c-primary-hover: #a85733;
+  --c-primary-soft: #f6e6dc;
+
+  /* 狀態色（低彩度） */
+  --c-success: #5f7d4e;
+  --c-success-soft: #e8eee2;
+  --c-warning: #a87a26;
+  --c-warning-soft: #f7eedb;
+  --c-danger: #b0503c;
+  --c-danger-soft: #f5e1db;
+  --c-info: #5d7a86;
+  --c-info-soft: #e3ecef;
+
+  --radius: 10px;
+  --radius-sm: 6px;
+  --header-height: 64px;
+
+  /* 頁面寬度 */
+  --w-wide: 1120px;
+  --w-medium: 800px;
+  --w-narrow: 560px;
 }
 
+/* ---------------- 基本 ---------------- */
+
 html {
-  font-size: 16px;
+  font-size: 15px;
 }
 
 body {
-  background: #f2f3f5;
+  background: var(--c-bg);
+  color: var(--c-text);
   font-family: system-ui, -apple-system, "PingFang TC", "Microsoft JhengHei", "Noto Sans TC", sans-serif;
-  -webkit-text-size-adjust: 100%;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
 }
 
+a {
+  color: var(--c-primary);
+  text-decoration: none;
+}
+
+a:hover {
+  color: var(--c-primary-hover);
+}
+
+h1, .h1, h2, .h2, h3, .h3, h4, .h4, h5, .h5, h6, .h6 {
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.text-muted {
+  color: var(--c-muted) !important;
+}
+
+hr {
+  border-color: var(--c-border);
+  opacity: 1;
+}
+
+/* ---------------- 版型 ---------------- */
+
 .app-shell {
-  max-width: var(--app-max-width);
-  min-height: 100dvh;
-  margin: 0 auto;
-  background: #fff;
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
 }
@@ -27,41 +86,63 @@ body {
   position: sticky;
   top: 0;
   z-index: 1020;
-  height: var(--app-header-height);
-  padding: 0 12px;
-  padding-top: env(safe-area-inset-top);
+  background: rgba(250, 247, 242, 0.92);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--c-border);
+}
+
+.app-header-inner {
+  max-width: var(--w-wide);
+  height: var(--header-height);
+  margin: 0 auto;
+  padding: 0 24px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  background: #fff;
-  border-bottom: 1px solid #e5e7eb;
+  gap: 32px;
 }
 
 .app-brand {
   font-weight: 700;
-  font-size: 1.125rem;
-  color: inherit;
-  text-decoration: none;
+  font-size: 1.25rem;
+  letter-spacing: 0.02em;
+  color: var(--c-text);
 }
 
-.app-main {
+.app-brand:hover {
+  color: var(--c-text);
+}
+
+.app-brand-dot {
+  color: var(--c-primary);
+}
+
+.app-nav {
+  display: flex;
+  gap: 24px;
   flex: 1;
-  padding: 16px;
-  padding-bottom: calc(16px + env(safe-area-inset-bottom));
 }
 
-/* 頁首：使用者選單 */
+.app-nav a {
+  color: var(--c-muted);
+  font-size: 0.95rem;
+}
+
+.app-nav a:hover,
+.app-nav a.active {
+  color: var(--c-text);
+}
+
 .app-auth {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 8px;
 }
 
 .app-user-button {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  max-width: 220px;
+  gap: 8px;
+  max-width: 260px;
 }
 
 .app-user-name {
@@ -70,11 +151,252 @@ body {
   white-space: nowrap;
 }
 
-/* 註冊：身分選擇卡片 */
+.app-main {
+  flex: 1;
+  width: 100%;
+  margin: 0 auto;
+  padding: 40px 24px 64px;
+}
+
+.app-main.page-wide   { max-width: calc(var(--w-wide) + 48px); }
+.app-main.page-medium { max-width: calc(var(--w-medium) + 48px); }
+.app-main.page-narrow { max-width: calc(var(--w-narrow) + 48px); }
+
+.app-footer {
+  border-top: 1px solid var(--c-border);
+  color: var(--c-muted);
+  font-size: 0.85rem;
+  text-align: center;
+  padding: 24px;
+}
+
+/* 頁面標題列：標題在左、動作在右 */
+.page-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 28px;
+}
+
+.page-header h1 {
+  margin: 0;
+}
+
+.back-link {
+  display: inline-block;
+  margin-bottom: 12px;
+  font-size: 0.9rem;
+  color: var(--c-muted);
+}
+
+/* 卡片式區塊（表單、資訊） */
+.panel {
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius);
+  padding: 28px;
+}
+
+.panel-soft {
+  background: var(--c-surface-soft);
+  border-radius: var(--radius);
+  padding: 16px 20px;
+}
+
+/* ---------------- Bootstrap 元件換成暖色 ---------------- */
+
+.btn {
+  border-radius: var(--radius-sm);
+  font-weight: 500;
+  padding: 0.45rem 1.1rem;
+}
+
+.btn-lg {
+  padding: 0.65rem 1.5rem;
+  font-size: 1rem;
+}
+
+.btn-sm {
+  padding: 0.25rem 0.75rem;
+}
+
+.btn-primary {
+  background: var(--c-primary);
+  border-color: var(--c-primary);
+  color: #fff;
+}
+
+.btn-primary:hover,
+.btn-primary:focus,
+.btn-primary:active {
+  background: var(--c-primary-hover) !important;
+  border-color: var(--c-primary-hover) !important;
+  color: #fff;
+}
+
+.btn-outline-primary {
+  color: var(--c-primary);
+  border-color: var(--c-primary);
+}
+
+.btn-outline-primary:hover,
+.btn-outline-primary:active {
+  background: var(--c-primary) !important;
+  border-color: var(--c-primary) !important;
+  color: #fff;
+}
+
+.btn-outline-secondary,
+.btn-light {
+  color: var(--c-text);
+  background: var(--c-surface);
+  border-color: var(--c-border);
+}
+
+.btn-outline-secondary:hover,
+.btn-light:hover,
+.btn-light:active,
+.btn-light.show {
+  color: var(--c-text);
+  background: var(--c-surface-soft) !important;
+  border-color: var(--c-border) !important;
+}
+
+.btn-secondary,
+.btn-secondary:disabled {
+  color: var(--c-muted);
+  background: var(--c-surface-soft);
+  border-color: var(--c-border);
+  opacity: 1;
+}
+
+.btn-success {
+  background: var(--c-success);
+  border-color: var(--c-success);
+}
+
+.btn-success:hover {
+  background: #4f6b40;
+  border-color: #4f6b40;
+}
+
+.btn-danger {
+  background: var(--c-danger);
+  border-color: var(--c-danger);
+}
+
+.btn-outline-danger {
+  color: var(--c-danger);
+  border-color: var(--c-danger);
+}
+
+.btn-outline-danger:hover {
+  background: var(--c-danger);
+  border-color: var(--c-danger);
+  color: #fff;
+}
+
+.btn-link {
+  color: var(--c-text);
+}
+
+.btn:focus,
+.btn:active:focus,
+.form-control:focus,
+.form-select:focus,
+.form-check-input:focus {
+  box-shadow: 0 0 0 3px var(--c-primary-soft);
+}
+
+.form-label {
+  font-weight: 500;
+  font-size: 0.92rem;
+  margin-bottom: 6px;
+}
+
+.form-control,
+.form-select {
+  border-color: var(--c-border);
+  border-radius: var(--radius-sm);
+  background-color: var(--c-surface);
+  padding: 0.55rem 0.8rem;
+}
+
+.form-control:focus,
+.form-select:focus {
+  border-color: var(--c-primary);
+}
+
+.form-control[readonly] {
+  background: var(--c-surface-soft);
+}
+
+.form-text {
+  color: var(--c-muted);
+}
+
+.form-check-input:checked {
+  background-color: var(--c-primary);
+  border-color: var(--c-primary);
+}
+
+.text-danger {
+  color: var(--c-danger) !important;
+}
+
+.alert {
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 0.8rem 1rem;
+}
+
+.alert-success   { background: var(--c-success-soft); color: var(--c-success); }
+.alert-warning   { background: var(--c-warning-soft); color: var(--c-warning); }
+.alert-danger    { background: var(--c-danger-soft);  color: var(--c-danger); }
+.alert-info      { background: var(--c-info-soft);    color: var(--c-info); }
+.alert-secondary { background: var(--c-surface-soft); color: var(--c-muted); }
+
+.dropdown-menu {
+  border-color: var(--c-border);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 8px 24px rgba(60, 40, 20, 0.08);
+  padding: 6px;
+}
+
+.dropdown-item {
+  border-radius: 4px;
+  padding: 0.45rem 0.8rem;
+}
+
+.dropdown-item:hover,
+.dropdown-item:focus {
+  background: var(--c-surface-soft);
+  color: var(--c-text);
+}
+
+/* 狀態標籤：淺底色 + 深字（Bootstrap 5.1 沒有 text-bg-*，在此定義） */
+.badge {
+  font-weight: 500;
+  font-size: 0.78rem;
+  padding: 0.35em 0.7em;
+  border-radius: 999px;
+}
+
+.text-bg-success   { background: var(--c-success-soft) !important; color: var(--c-success) !important; }
+.text-bg-warning   { background: var(--c-warning-soft) !important; color: var(--c-warning) !important; }
+.text-bg-danger    { background: var(--c-danger-soft)  !important; color: var(--c-danger)  !important; }
+.text-bg-info      { background: var(--c-info-soft)    !important; color: var(--c-info)    !important; }
+.text-bg-secondary { background: var(--c-surface-soft) !important; color: var(--c-muted)   !important; }
+.text-bg-light     { background: var(--c-surface)      !important; color: var(--c-muted)   !important; }
+
+/* ---------------- 註冊：身分選擇 ---------------- */
+
 .account-type-options {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 8px;
+  gap: 12px;
 }
 
 .account-type-card {
@@ -82,22 +404,28 @@ body {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  padding: 12px 12px 12px 40px;
-  border: 1px solid #dee2e6;
-  border-radius: 8px;
+  padding: 14px 14px 14px 42px;
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-sm);
+  background: var(--c-surface);
   cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
 }
 
 .account-type-card .form-check-input {
   position: absolute;
-  left: 12px;
-  top: 14px;
+  left: 14px;
+  top: 17px;
   margin: 0;
 }
 
+.account-type-card:hover {
+  border-color: var(--c-primary);
+}
+
 .account-type-card:has(.form-check-input:checked) {
-  border-color: #0d6efd;
-  background: #f0f6ff;
+  border-color: var(--c-primary);
+  background: var(--c-primary-soft);
 }
 
 .account-type-title {
@@ -105,44 +433,52 @@ body {
 }
 
 .account-type-desc {
-  font-size: 0.8125rem;
-  color: #6c757d;
+  font-size: 0.85rem;
+  color: var(--c-muted);
 }
 
-/* 前台：搜尋列 */
+/* ---------------- 前台：搜尋 ---------------- */
+
 .event-search {
   display: flex;
   gap: 8px;
+  width: 100%;
+  max-width: 420px;
 }
 
 .event-search .btn {
   flex-shrink: 0;
 }
 
-/* 前台：活動卡片列表 */
+/* ---------------- 前台：活動卡片 ---------------- */
+
 .event-card-list {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 28px;
 }
 
 .event-card {
-  display: block;
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius);
   overflow: hidden;
   color: inherit;
-  text-decoration: none;
+  transition: transform 0.15s, border-color 0.15s;
 }
 
-.event-card:active {
-  background: #f8f9fa;
+.event-card:hover {
+  color: inherit;
+  border-color: #dccfbf;
+  transform: translateY(-2px);
 }
 
 .event-card-cover {
   position: relative;
-  aspect-ratio: 16 / 9;
-  background: #e9ecef;
+  aspect-ratio: 3 / 2;
+  background: var(--c-surface-soft);
 }
 
 .event-card-cover img {
@@ -153,17 +489,22 @@ body {
 
 .event-card-badge {
   position: absolute;
-  top: 8px;
-  left: 8px;
+  top: 12px;
+  left: 12px;
 }
 
 .event-card-body {
-  padding: 10px 12px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  padding: 16px 18px 18px;
 }
 
 .event-card-title {
   font-weight: 600;
-  font-size: 1.0625rem;
+  font-size: 1.07rem;
+  margin-bottom: 6px;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -171,43 +512,57 @@ body {
 }
 
 .event-card-meta {
-  font-size: 0.875rem;
-  color: #6c757d;
+  font-size: 0.88rem;
+  color: var(--c-muted);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
+.event-card-footer {
+  margin-top: auto;
+  padding-top: 12px;
+}
+
 .event-card-price {
   font-weight: 600;
+  color: var(--c-primary);
 }
 
-/* 前台：活動詳情 */
+.empty-state {
+  text-align: center;
+  color: var(--c-muted);
+  padding: 80px 0;
+}
+
+.pager {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 40px;
+}
+
+/* ---------------- 前台：活動詳情（左內容、右報名資訊） ---------------- */
+
+.detail-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 48px;
+  align-items: start;
+}
+
 .event-detail-cover {
   display: block;
-  width: calc(100% + 32px);
-  margin: -16px -16px 0;
+  width: 100%;
   aspect-ratio: 16 / 9;
   object-fit: cover;
+  border-radius: var(--radius);
+  margin-bottom: 28px;
 }
 
-.event-detail-info {
-  display: grid;
-  grid-template-columns: 4.5em 1fr;
-  gap: 8px 12px;
-  margin: 16px 0 0;
-  padding: 12px;
-  border-radius: 8px;
-  background: #f8f9fa;
-}
-
-.event-detail-info dt {
-  font-weight: normal;
-  color: #6c757d;
-}
-
-.event-detail-info dd {
-  margin: 0;
+.event-detail-title {
+  font-size: 1.9rem;
+  line-height: 1.35;
+  margin-bottom: 8px;
 }
 
 .event-detail-description {
@@ -215,46 +570,90 @@ body {
   overflow-wrap: anywhere;
 }
 
-/* 底部固定的報名列 */
-.event-detail-action {
+.detail-aside {
   position: sticky;
-  bottom: 0;
+  top: calc(var(--header-height) + 24px);
+}
+
+.detail-aside .panel {
+  padding: 24px;
+}
+
+.detail-price {
+  font-size: 1.6rem;
+  font-weight: 600;
+  color: var(--c-primary);
+}
+
+/* 欄位名稱 + 值的清單 */
+.event-detail-info {
+  display: grid;
+  grid-template-columns: 5.5em 1fr;
+  gap: 10px 16px;
+  margin: 0;
+}
+
+.event-detail-info dt {
+  font-weight: normal;
+  color: var(--c-muted);
+}
+
+.event-detail-info dd {
+  margin: 0;
+}
+
+.section-title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 32px 0 12px;
+}
+
+/* 訂單頁：付款列 */
+.event-detail-action {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  margin: 24px -16px calc(-16px - env(safe-area-inset-bottom));
-  padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
-  background: #fff;
-  border-top: 1px solid #e5e7eb;
+  gap: 16px;
+  margin-top: 28px;
+  padding: 20px 24px;
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius);
 }
 
-/* 主辦方：我的活動列表 */
+/* ---------------- 列表（我的活動、我的報名） ---------------- */
+
 .event-list {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 12px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
 }
 
 .event-list-item {
   display: flex;
-  gap: 12px;
-  padding: 10px;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
+  align-items: center;
+  gap: 20px;
+  padding: 16px 20px;
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius);
   color: inherit;
-  text-decoration: none;
+  transition: border-color 0.15s;
 }
 
-.event-list-item:active {
-  background: #f8f9fa;
+.event-list-item:hover {
+  color: inherit;
+  border-color: #dccfbf;
 }
 
 .event-list-thumb {
-  flex: 0 0 72px;
-  height: 72px;
-  border-radius: 6px;
-  background: #e9ecef;
+  flex: 0 0 120px;
+  height: 80px;
+  border-radius: var(--radius-sm);
+  background: var(--c-surface-soft);
   overflow: hidden;
 }
 
@@ -279,26 +678,73 @@ body {
   white-space: nowrap;
 }
 
-/* 主辦方：編輯活動 */
+/* ---------------- 主辦方：編輯活動 ---------------- */
+
 .event-status-panel {
-  padding: 12px;
-  border-radius: 8px;
-  background: #f8f9fa;
+  padding: 18px 20px;
+  border-radius: var(--radius);
+  background: var(--c-surface-soft);
 }
 
 .event-cover-preview {
   display: block;
   width: 100%;
+  max-width: 360px;
   aspect-ratio: 16 / 9;
   object-fit: cover;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
 }
 
-/* 手機觸控：按鈕至少 44px 高 */
-.btn-lg, .btn-block-mobile {
-  min-height: 44px;
+/* ---------------- 小螢幕：自動縮為單欄 ---------------- */
+
+@media (max-width: 991.98px) {
+  .event-card-list {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+  }
+
+  .detail-layout {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+
+  .detail-aside {
+    position: static;
+  }
 }
 
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+@media (max-width: 575.98px) {
+  html {
+    font-size: 15px;
+  }
+
+  .app-header-inner {
+    padding: 0 16px;
+    gap: 16px;
+  }
+
+  .app-nav {
+    display: none;
+  }
+
+  .app-main {
+    padding: 24px 16px 48px;
+  }
+
+  .panel {
+    padding: 20px;
+  }
+
+  .event-card-list {
+    grid-template-columns: 1fr;
+  }
+
+  .event-list-thumb {
+    flex-basis: 72px;
+    height: 72px;
+  }
+
+  .event-search {
+    max-width: none;
+  }
 }

@@ -1,9 +1,11 @@
 @model EventHub.Web.Models.Account.RegisterViewModel
 @{
     ViewData["Title"] = "註冊";
+    ViewData["PageWidth"] = "narrow";
 }
 
-<h1 class="h4 mb-3">建立帳號</h1>
+<div class="panel">
+<h1 class="h4 mb-4">建立帳號</h1>
 
 <form asp-action="Register" asp-route-returnUrl="@ViewData["ReturnUrl"]" method="post" novalidate>
     <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2" role="alert"></div>
@@ -57,6 +59,7 @@
     已經有帳號了？
     <a asp-action="Login" asp-route-returnUrl="@ViewData["ReturnUrl"]">登入</a>
 </p>
+</div>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />

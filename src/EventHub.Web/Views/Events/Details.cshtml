@@ -6,86 +6,85 @@
     ViewData["Title"] = Model.Title;
 }
 
+<a class="back-link" asp-controller="Home" asp-action="Index">‹ 所有活動</a>
+
 @if (Model.IsDraftPreview)
 {
-    <div class="alert alert-warning py-2">
+    <div class="alert alert-warning">
         預覽模式：這是尚未上架的草稿，只有你看得到。
     </div>
 }
 
-@if (Model.CoverImagePath is not null)
-{
-    <img src="@Model.CoverImagePath" alt="" class="event-detail-cover" />
-}
-
-<div class="d-flex align-items-start justify-content-between gap-2 mt-3">
-    <h1 class="h4 mb-0">@Model.Title</h1>
-    <span class="badge @Model.Availability.ToBadgeClass() flex-shrink-0">@Model.Availability.ToLabel()</span>
-</div>
-<div class="text-muted small mt-1">主辦：@Model.OrganizerName</div>
-
-@if (Model.IsOwner)
-{
-    <a class="btn btn-sm btn-outline-secondary mt-2" asp-controller="OrganizerEvents" asp-action="Edit" asp-route-id="@Model.Id">編輯此活動</a>
-}
-
-<dl class="event-detail-info">
-    <dt>時間</dt>
-    <dd>@EventTimeFormatter.FormatRange(Model.StartAt, Model.EndAt)</dd>
-
-    <dt>地點</dt>
-    <dd>
-        @Model.Location
-        <a class="d-block small" href="@Model.MapUrl" target="_blank" rel="noopener">在地圖上查看</a>
-    </dd>
-
-    <dt>費用</dt>
-    <dd>@Model.Price.ToPriceLabel()</dd>
-
-    <dt>名額</dt>
-    <dd>
-        共 @Model.Capacity 名
-        @if (Model.Availability is RegistrationAvailability.Open or RegistrationAvailability.Full)
+<div class="detail-layout">
+    @* ---------- 左：活動內容 ---------- *@
+    <article>
+        @if (Model.CoverImagePath is not null)
         {
-            <span class="text-muted">（剩 @Model.RemainingSeats 名）</span>
+            <img src="@Model.CoverImagePath" alt="" class="event-detail-cover" />
         }
-    </dd>
 
-    <dt>報名截止</dt>
-    <dd>@EventTimeFormatter.FormatDateTime(Model.RegistrationDeadline ?? Model.StartAt)</dd>
-</dl>
+        <span class="badge @Model.Availability.ToBadgeClass() mb-2">@Model.Availability.ToLabel()</span>
+        <h1 class="event-detail-title">@Model.Title</h1>
+        <div class="text-muted">主辦：@Model.OrganizerName</div>
 
-@if (!string.IsNullOrWhiteSpace(Model.Description))
-{
-    <h2 class="h6 mt-4">活動說明</h2>
-    @* 純文字顯示（已編碼，不會執行 HTML），保留換行 *@
-    <div class="event-detail-description">@Model.Description</div>
-}
-
-@* 底部固定的報名按鈕 *@
-<div class="event-detail-action">
-    <div>
-        <div class="fw-bold">@Model.Price.ToPriceLabel()</div>
-        @if (Model.Availability == RegistrationAvailability.Open)
+        @if (Model.IsOwner)
         {
-            <div class="small text-muted">剩 @Model.RemainingSeats 名</div>
+            <a class="btn btn-sm btn-outline-secondary mt-3" asp-controller="OrganizerEvents" asp-action="Edit" asp-route-id="@Model.Id">編輯此活動</a>
         }
-    </div>
-    @if (Model.MyOrderNo is not null)
-    {
-        <a class="btn btn-outline-primary btn-lg" asp-controller="Orders" asp-action="Details" asp-route-orderNo="@Model.MyOrderNo">查看我的報名</a>
-    }
-    else if (Model.Availability != RegistrationAvailability.Open)
-    {
-        <button type="button" class="btn btn-secondary btn-lg" disabled>@Model.Availability.ToLabel()</button>
-    }
-    else if (User.Identity?.IsAuthenticated == true && !User.IsInRole(AppRoles.Attendee))
-    {
-        <button type="button" class="btn btn-secondary btn-lg" disabled>僅限報名者帳號報名</button>
-    }
-    else
-    {
-        @* 未登入會先被導到登入頁，登入後回到報名表單 *@
-        <a class="btn btn-primary btn-lg" asp-action="Register" asp-route-id="@Model.Id">立即報名</a>
-    }
+
+        @if (!string.IsNullOrWhiteSpace(Model.Description))
+        {
+            <h2 class="section-title">活動說明</h2>
+            @* 純文字顯示（已編碼，不會執行 HTML），保留換行 *@
+            <div class="event-detail-description">@Model.Description</div>
+        }
+    </article>
+
+    @* ---------- 右：報名資訊（捲動時固定） ---------- *@
+    <aside class="detail-aside">
+        <div class="panel">
+            <div class="detail-price mb-3">@Model.Price.ToPriceLabel()</div>
+
+            <dl class="event-detail-info mb-4">
+                <dt>時間</dt>
+                <dd>@EventTimeFormatter.FormatRange(Model.StartAt, Model.EndAt)</dd>
+
+                <dt>地點</dt>
+                <dd>
+                    @Model.Location
+                    <a class="d-block small" href="@Model.MapUrl" target="_blank" rel="noopener">在地圖上查看</a>
+                </dd>
+
+                <dt>名額</dt>
+                <dd>
+                    共 @Model.Capacity 名
+                    @if (Model.Availability is RegistrationAvailability.Open or RegistrationAvailability.Full)
+                    {
+                        <span class="text-muted">（剩 @Model.RemainingSeats 名）</span>
+                    }
+                </dd>
+
+                <dt>報名截止</dt>
+                <dd>@EventTimeFormatter.FormatDateTime(Model.RegistrationDeadline ?? Model.StartAt)</dd>
+            </dl>
+
+            @if (Model.MyOrderNo is not null)
+            {
+                <a class="btn btn-outline-primary btn-lg w-100" asp-controller="Orders" asp-action="Details" asp-route-orderNo="@Model.MyOrderNo">查看我的報名</a>
+            }
+            else if (Model.Availability != RegistrationAvailability.Open)
+            {
+                <button type="button" class="btn btn-secondary btn-lg w-100" disabled>@Model.Availability.ToLabel()</button>
+            }
+            else if (User.Identity?.IsAuthenticated == true && !User.IsInRole(AppRoles.Attendee))
+            {
+                <button type="button" class="btn btn-secondary btn-lg w-100" disabled>僅限報名者帳號報名</button>
+            }
+            else
+            {
+                @* 未登入會先被導到登入頁，登入後回到報名表單 *@
+                <a class="btn btn-primary btn-lg w-100" asp-action="Register" asp-route-id="@Model.Id">立即報名</a>
+            }
+        </div>
+    </aside>
 </div>
