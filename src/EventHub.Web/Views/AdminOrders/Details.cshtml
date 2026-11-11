@@ -21,6 +21,14 @@
     <div class="alert alert-danger">此活動已取消。</div>
 }
 
+@if (Model.HasPaymentIssue)
+{
+    <div class="alert alert-danger">
+        此訂單有需要處理的付款紀錄（例如重複付款、訂單取消後才付款），請看下方「付款通知紀錄」，
+        依綠界交易編號到<strong>綠界廠商後台</strong>辦理退款或確認。
+    </div>
+}
+
 <div class="row g-4">
     <div class="col-md-6">
         <div class="panel h-100">
@@ -110,6 +118,42 @@
             </dl>
         </div>
     </div>
+</div>
+
+<div class="panel mt-4">
+    <h2 class="section-title mt-0">付款通知紀錄</h2>
+    @if (Model.PaymentNotifications.Count == 0)
+    {
+        <p class="text-muted small mb-0">尚未收到綠界付款通知。</p>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-sm align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>收到時間</th>
+                        <th>綠界交易</th>
+                        <th>付款嘗試</th>
+                        <th class="text-end">金額</th>
+                        <th>結果</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var n in Model.PaymentNotifications)
+                    {
+                        <tr>
+                            <td class="text-nowrap">@EventTimeFormatter.FormatDateTime(n.ReceivedAt)</td>
+                            <td class="font-monospace">@(n.EcpayTradeNo ?? "—")</td>
+                            <td class="font-monospace small text-muted">@n.MerchantTradeNo</td>
+                            <td class="text-end text-nowrap">NT$ @n.TradeAmount.ToString("N0")</td>
+                            <td><span class="badge @PaymentProcessResult.ToBadgeClass(n.ProcessResult)">@PaymentProcessResult.ToLabel(n.ProcessResult)</span></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
 </div>
 
 @if (Model.CanMarkRefunded)

@@ -43,14 +43,18 @@
 
 @if (Model.IsAwaitingPayment)
 {
-    <div class="event-detail-action mb-4">
+    <div class="event-detail-action mb-2">
         <div>
             <div class="text-muted small">應付金額</div>
             <div class="detail-price">@Model.Amount.ToPriceLabel()</div>
         </div>
-        @* TODO 第 5 步：送出綠界結帳 *@
-        <button type="button" class="btn btn-primary btn-lg" disabled>付款功能即將開放</button>
+        <form asp-action="Pay" asp-route-orderNo="@Model.OrderNo" method="post">
+            <button type="submit" class="btn btn-primary btn-lg">前往付款</button>
+        </form>
     </div>
+    <p class="small text-muted mb-4">
+        由綠界科技提供付款服務，目前僅支援信用卡。已完成付款但狀態還沒更新的話，請稍候幾秒再重新整理頁面。
+    </p>
 }
 
 <div class="panel mb-4">

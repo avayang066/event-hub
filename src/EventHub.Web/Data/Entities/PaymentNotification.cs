@@ -12,7 +12,7 @@ public class PaymentNotification
     public int? OrderId { get; set; }
     public Order? Order { get; set; }
 
-    /// <summary>綠界回傳的 MerchantTradeNo（= orders.order_no）</summary>
+    /// <summary>綠界回傳的 MerchantTradeNo（= payment_attempts.merchant_trade_no）</summary>
     public string MerchantTradeNo { get; set; } = "";
 
     /// <summary>綠界交易編號 TradeNo</summary>
@@ -36,7 +36,7 @@ public class PaymentNotification
     /// <summary>CheckMacValue 是否驗證通過</summary>
     public bool IsCheckMacValid { get; set; }
 
-    /// <summary>處理結果，例如 Paid、Duplicate、InvalidCheckMac、AmountMismatch、OrderNotFound</summary>
+    /// <summary>處理結果，可能的值見 Services.PaymentProcessResult</summary>
     public string ProcessResult { get; set; } = "";
 
     /// <summary>完整的 POST 內容（原樣保存）</summary>

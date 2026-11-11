@@ -10,6 +10,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
 {
     public DbSet<Event> Events => Set<Event>();
     public DbSet<Order> Orders => Set<Order>();
+    public DbSet<PaymentAttempt> PaymentAttempts => Set<PaymentAttempt>();
     public DbSet<PaymentNotification> PaymentNotifications => Set<PaymentNotification>();
 
     protected override void OnModelCreating(ModelBuilder builder)

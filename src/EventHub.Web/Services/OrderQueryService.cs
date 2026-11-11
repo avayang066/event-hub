@@ -74,6 +74,21 @@ public class OrderQueryService(AppDbContext db, TimeProvider timeProvider)
             return null;
         }
 
+        var notifications = await db.PaymentNotifications
+            .AsNoTracking()
+            .Where(n => n.OrderId == o.Id)
+            .OrderBy(n => n.Id)
+            .Select(n => new PaymentNotificationItemViewModel
+            {
+                ReceivedAt = n.ReceivedAt,
+                MerchantTradeNo = n.MerchantTradeNo,
+                EcpayTradeNo = n.EcpayTradeNo,
+                TradeAmount = n.TradeAmount,
+                PaymentType = n.PaymentType,
+                ProcessResult = n.ProcessResult,
+            })
+            .ToListAsync();
+
         return new AdminOrderDetailViewModel
         {
             Order = ToDetail(o),
@@ -84,6 +99,7 @@ public class OrderQueryService(AppDbContext db, TimeProvider timeProvider)
             EcpayTradeNo = o.EcpayTradeNo,
             PaymentType = o.PaymentType,
             RefundAmount = o.RefundAmount,
+            PaymentNotifications = notifications,
         };
     }
 

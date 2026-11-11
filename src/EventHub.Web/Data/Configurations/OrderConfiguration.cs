@@ -67,7 +67,7 @@ public class OrderConfiguration : IEntityTypeConfiguration<Order>
         o.Property(x => x.CreatedAt).HasColumnName("created_at");
         o.Property(x => x.UpdatedAt).HasColumnName("updated_at");
 
-        // 綠界通知用 order_no 找訂單；唯一，避免重複送單
+        // 訂單編號唯一（網址與客服查詢用）
         o.HasIndex(x => x.OrderNo).IsUnique().HasDatabaseName("ux_orders_order_no");
         // 同一筆綠界交易只能對應一張訂單（MySQL 唯一索引允許多個 NULL）
         o.HasIndex(x => x.EcpayTradeNo).IsUnique().HasDatabaseName("ux_orders_ecpay_trade_no");

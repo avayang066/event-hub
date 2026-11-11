@@ -22,6 +22,11 @@ public class TestWebAppFactory : WebApplicationFactory<Program>
 
     public string UploadRoot => Path.Combine(_tempRoot, "uploads");
 
+    public const string EcpayMerchantId = "3002607";
+    public const string EcpayHashKey = "pwFHCqoQZGmho4w6";
+    public const string EcpayHashIV = "EkRm7iFT261dpevs";
+    public const string EcpayCheckoutUrl = "https://payment-stage.ecpay.com.tw/Cashier/AioCheckOut/V5";
+
     public TestWebAppFactory()
     {
         Directory.CreateDirectory(_tempRoot);
@@ -45,6 +50,12 @@ public class TestWebAppFactory : WebApplicationFactory<Program>
         builder.UseSetting("Uploads:RootPath", UploadRoot);
         // 背景排程關閉，避免在測試途中自動取消訂單；需要時由測試直接呼叫
         builder.UseSetting("OrderExpiration:Enabled", "false");
+        // 綠界測試特店（官方公開的測試資料）
+        builder.UseSetting("Ecpay:MerchantId", EcpayMerchantId);
+        builder.UseSetting("Ecpay:HashKey", EcpayHashKey);
+        builder.UseSetting("Ecpay:HashIV", EcpayHashIV);
+        builder.UseSetting("Ecpay:CheckoutUrl", EcpayCheckoutUrl);
+        builder.UseSetting("Ecpay:PublicBaseUrl", "https://eventhub.example.test");
 
         builder.ConfigureServices(services =>
         {

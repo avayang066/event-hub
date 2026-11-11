@@ -331,6 +331,48 @@ namespace EventHub.Web.Data.Migrations
                         });
                 });
 
+            modelBuilder.Entity("EventHub.Web.Data.Entities.PaymentAttempt", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("Amount")
+                        .HasColumnType("int")
+                        .HasColumnName("amount");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("MerchantTradeNo")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("merchant_trade_no");
+
+                    b.Property<int>("OrderId")
+                        .HasColumnType("int")
+                        .HasColumnName("order_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MerchantTradeNo")
+                        .IsUnique()
+                        .HasDatabaseName("ux_payment_attempts_merchant_trade_no");
+
+                    b.HasIndex("OrderId")
+                        .HasDatabaseName("ix_payment_attempts_order_id");
+
+                    b.ToTable("payment_attempts", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_payment_attempts_amount", "amount > 0");
+                        });
+                });
+
             modelBuilder.Entity("EventHub.Web.Data.Entities.PaymentNotification", b =>
                 {
                     b.Property<long>("Id")
@@ -584,6 +626,17 @@ namespace EventHub.Web.Data.Migrations
                     b.Navigation("Organizer");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("EventHub.Web.Data.Entities.PaymentAttempt", b =>
+                {
+                    b.HasOne("EventHub.Web.Data.Entities.Order", "Order")
+                        .WithMany()
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Order");
                 });
 
             modelBuilder.Entity("EventHub.Web.Data.Entities.PaymentNotification", b =>

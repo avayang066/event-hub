@@ -9,8 +9,9 @@ public class Order
     public int Id { get; set; }
 
     /// <summary>
-    /// 平台訂單編號，送給綠界當 MerchantTradeNo（英數字、最長 20 碼、全站唯一），
-    /// 例如 EH2611041530XXXXXX。
+    /// 平台訂單編號（英數字 20 碼、全站唯一），例如 EH261104153012K7QX2M。
+    /// 送給綠界的 MerchantTradeNo 每次付款都不同，記在 payment_attempts；
+    /// 這個編號放在綠界的 CustomField1，方便在綠界後台對照。
     /// </summary>
     public string OrderNo { get; set; } = "";
 

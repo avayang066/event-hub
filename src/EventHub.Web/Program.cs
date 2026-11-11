@@ -29,6 +29,9 @@ builder.Services
         options.SignIn.RequireConfirmedAccount = false;
         options.User.RequireUniqueEmail = true;
 
+        // 與第一版資料表一致（user_logins、user_tokens 的鍵欄位 varchar(128)）
+        options.Stores.MaxLengthForKeys = 128;
+
         // 密碼：至少 8 碼，需含數字；需含英文字母由 RequireLetterPasswordValidator 檢查
         options.Password.RequiredLength = 8;
         options.Password.RequireDigit = true;
@@ -70,6 +73,7 @@ builder.Services.AddScoped<EventQueryService>();
 builder.Services.AddScoped<RegistrationService>();
 builder.Services.AddScoped<OrderQueryService>();
 builder.Services.AddScoped<OrderStateService>();
+builder.Services.AddScoped<EcpayPaymentService>();
 
 // ---- 背景排程：取消逾期未付款的訂單 ----
 builder.Services.Configure<OrderExpirationOptions>(builder.Configuration.GetSection(OrderExpirationOptions.SectionName));

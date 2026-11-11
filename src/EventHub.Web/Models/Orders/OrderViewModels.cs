@@ -56,5 +56,22 @@ public class AdminOrderDetailViewModel
     public string? PaymentType { get; init; }
     public int? RefundAmount { get; init; }
 
+    /// <summary>這張訂單收到的綠界付款通知（依收到時間排序）</summary>
+    public IReadOnlyList<PaymentNotificationItemViewModel> PaymentNotifications { get; init; } = [];
+
     public bool CanMarkRefunded => Order.Status == OrderDisplayStatus.Paid;
+
+    /// <summary>有重複付款、取消後才付款等需要人工處理的通知</summary>
+    public bool HasPaymentIssue => PaymentNotifications.Any(n => PaymentProcessResult.NeedsAttention(n.ProcessResult));
+}
+
+/// <summary>一則綠界付款通知（管理員查看）。</summary>
+public class PaymentNotificationItemViewModel
+{
+    public DateTime ReceivedAt { get; init; }
+    public string MerchantTradeNo { get; init; } = "";
+    public string? EcpayTradeNo { get; init; }
+    public int TradeAmount { get; init; }
+    public string? PaymentType { get; init; }
+    public string ProcessResult { get; init; } = "";
 }

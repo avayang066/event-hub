@@ -61,13 +61,22 @@ dotnet user-secrets init --project src/EventHub.Web
 dotnet user-secrets set "Ecpay:HashKey" "xxxx" --project src/EventHub.Web
 ```
 
-付款結果通知（ReturnURL）是綠界伺服器直接呼叫，必須是公開網址。本機用 ngrok：
+付款結果通知（ReturnURL）是綠界伺服器直接呼叫，必須是公開網址（且只能用 80／443 port）。
+本機用 ngrok（需 3.28 以上，舊版請先 `ngrok update`），網址固定為 ngrok 後台申請的免費網域：
 
 ```powershell
-C:\laragon\bin\ngrok\ngrok.exe http 5117
+ngrok http --url=stature-karaoke-rigging.ngrok-free.dev 5117
 ```
 
-再把產生的 https 網址填到 `Ecpay:PublicBaseUrl`。
+`Ecpay:PublicBaseUrl` 要填同一個網址。
+
+測試付款：
+
+- 信用卡號 `4311-9522-2222-2222`，安全碼任意 3 碼，有效期限填未來的月年；3D 驗證簡訊碼固定 `1234`。
+- 測試廠商後台 https://vendor-stage.ecpay.com.tw/（`stagetest3` / `test1234`）可查訂單。
+  後台的「模擬付款」會帶 `SimulatePaid=1`，網站只記錄、**不會**改成已付款。
+- 每次按「前往付款」都會產生新的 MerchantTradeNo（綠界規定不可重複），記在 `payment_attempts`；
+  綠界每則付款通知都記在 `payment_notifications`，管理員可在訂單詳情頁看到。
 
 ### 寄信
 
