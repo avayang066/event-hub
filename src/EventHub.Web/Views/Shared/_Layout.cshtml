@@ -32,7 +32,9 @@
                     }
                     @if (User.IsInRole(AppRoles.Admin))
                     {
-                        <a asp-controller="AdminOrders" asp-action="Index">訂單查詢</a>
+                        <a asp-controller="AdminOrders" asp-action="Index">訂單</a>
+                        <a asp-controller="AdminEvents" asp-action="Index">活動總覽</a>
+                        <a asp-controller="AdminPayouts" asp-action="Index">撥款</a>
                     }
                 </nav>
 

@@ -77,6 +77,7 @@ builder.Services.AddScoped<RegistrationService>();
 builder.Services.AddScoped<OrderQueryService>();
 builder.Services.AddScoped<OrderStateService>();
 builder.Services.AddScoped<EcpayPaymentService>();
+builder.Services.AddScoped<ReportService>();
 
 // ---- 報名成功信：報名／付款成功時放進佇列，由背景寄出；失敗的定期補寄 ----
 builder.Services.AddSingleton<IEmailSender, SmtpEmailSender>();

@@ -1,0 +1,85 @@
+@model EventHub.Web.Models.Reports.PayoutListViewModel
+@{
+    ViewData["Title"] = "撥款彙總";
+}
+
+<div class="page-header">
+    <h1 class="h3">撥款彙總</h1>
+</div>
+
+<div class="stat-grid mb-3">
+    <div class="stat-tile stat-tile-accent">
+        <div class="stat-label">可撥款（活動已結束）</div>
+        <div class="stat-value"><small>NT$ </small>@Model.EndedOrganizerAmount.ToString("N0")</div>
+    </div>
+    <div class="stat-tile">
+        <div class="stat-label">暫不撥款（活動未結束）</div>
+        <div class="stat-value"><small>NT$ </small>@Model.UpcomingOrganizerAmount.ToString("N0")</div>
+    </div>
+    <div class="stat-tile">
+        <div class="stat-label">平台手續費</div>
+        <div class="stat-value"><small>NT$ </small>@Model.TotalPlatformFee.ToString("N0")</div>
+    </div>
+    <div class="stat-tile">
+        <div class="stat-label">待退款（活動已取消）</div>
+        <div class="stat-value"><small>NT$ </small>@Model.ToRefundAmount.ToString("N0")</div>
+    </div>
+</div>
+
+<p class="small text-muted mb-4">
+    只計算付費且已付款的報名，金額為累計（目前沒有記錄已撥款）。活動結束後才撥款，避免活動取消時款項已經撥出；
+    已取消活動的款項要退給報名者，不撥給主辦方。
+</p>
+
+@if (Model.Items.Count == 0)
+{
+    <div class="panel text-center text-muted">目前還沒有付費報名。</div>
+}
+else
+{
+    <div class="panel p-0">
+        <div class="table-responsive">
+            <table class="table data-table mb-0">
+                <thead>
+                    <tr>
+                        <th>主辦方</th>
+                        <th class="text-end">付費報名</th>
+                        <th class="text-end">實收</th>
+                        <th class="text-end">手續費</th>
+                        <th class="text-end">可撥款<div class="small fw-normal text-muted">活動已結束</div></th>
+                        <th class="text-end">暫不撥款<div class="small fw-normal text-muted">活動未結束</div></th>
+                        <th class="text-end">待退款<div class="small fw-normal text-muted">活動已取消</div></th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var p in Model.Items)
+                    {
+                        <tr>
+                            <td>
+                                @p.OrganizerName
+                                <div class="small text-muted text-break">@p.OrganizerEmail</div>
+                            </td>
+                            <td class="text-end">@p.TotalPaidCount</td>
+                            <td class="text-end text-nowrap">@p.TotalAmount.ToString("N0")</td>
+                            <td class="text-end text-nowrap">@p.TotalPlatformFee.ToString("N0")</td>
+                            <td class="text-end text-nowrap fw-semibold">@p.Ended.OrganizerAmount.ToString("N0")</td>
+                            <td class="text-end text-nowrap">@p.Upcoming.OrganizerAmount.ToString("N0")</td>
+                            <td class="text-end text-nowrap @(p.ToRefund.Amount > 0 ? "text-danger" : "text-muted")">
+                                @p.ToRefund.Amount.ToString("N0")
+                                @if (p.ToRefund.PaidCount > 0)
+                                {
+                                    <div class="small">@p.ToRefund.PaidCount 筆</div>
+                                }
+                            </td>
+                            <td class="text-nowrap">
+                                <a class="small" asp-controller="AdminEvents" asp-action="Index" asp-route-organizer="@p.OrganizerId">活動 ›</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <p class="small text-muted mt-2">金額單位：新台幣元。「實收」「手續費」不含待退款。</p>
+}

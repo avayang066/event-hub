@@ -27,7 +27,8 @@
     <aside class="detail-aside">
         <div class="panel">
             <div class="text-muted small">已報名</div>
-            <div class="detail-price mb-3">@Model.ReservedCount <span class="fs-6 text-muted">/ @Model.Capacity 人</span></div>
+            <div class="detail-price mb-2">@Model.ReservedCount <span class="fs-6 text-muted">/ @Model.Capacity 人</span></div>
+            <a class="btn btn-outline-primary w-100 mb-3" asp-action="Registrations" asp-route-id="@Model.Id">報名名單與金額</a>
 
             @switch (Model.Status)
             {

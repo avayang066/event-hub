@@ -1,6 +1,6 @@
 @using EventHub.Web.Data.Entities
 @using EventHub.Web.Infrastructure
-@model List<Event>
+@model EventHub.Web.Models.Organizer.OrganizerDashboardViewModel
 @{
     ViewData["Title"] = "我的活動";
     ViewData["PageWidth"] = "medium";
@@ -11,7 +11,37 @@
     <a class="btn btn-primary" asp-controller="OrganizerEvents" asp-action="Create">＋ 新增活動</a>
 </div>
 
-@if (Model.Count == 0)
+@if (Model.Payout is { } payout)
+{
+    <div class="stat-grid mb-2">
+        <div class="stat-tile">
+            <div class="stat-label">付費報名</div>
+            <div class="stat-value">@payout.TotalPaidCount<small> 筆</small></div>
+        </div>
+        <div class="stat-tile">
+            <div class="stat-label">實收</div>
+            <div class="stat-value"><small>NT$ </small>@payout.TotalAmount.ToString("N0")</div>
+        </div>
+        <div class="stat-tile">
+            <div class="stat-label">平台手續費</div>
+            <div class="stat-value"><small>NT$ </small>@payout.TotalPlatformFee.ToString("N0")</div>
+        </div>
+        <div class="stat-tile stat-tile-accent">
+            <div class="stat-label">你的實拿</div>
+            <div class="stat-value"><small>NT$ </small>@payout.TotalOrganizerAmount.ToString("N0")</div>
+        </div>
+    </div>
+    <p class="small text-muted mb-4">
+        其中已結束的活動 NT$ @payout.Ended.OrganizerAmount.ToString("N0")（平台將撥款給你），
+        尚未結束的活動 NT$ @payout.Upcoming.OrganizerAmount.ToString("N0")（活動結束後撥款）。
+        @if (payout.ToRefund.PaidCount > 0)
+        {
+            <span class="text-danger">已取消的活動有 @payout.ToRefund.PaidCount 筆已付款報名（NT$ @payout.ToRefund.Amount.ToString("N0")）由平台退款，不列入撥款。</span>
+        }
+    </p>
+}
+
+@if (Model.Events.Count == 0)
 {
     <div class="empty-state">
         <p class="mb-3">還沒有活動。</p>
@@ -21,7 +51,7 @@
 else
 {
     <ul class="event-list">
-        @foreach (var e in Model)
+        @foreach (var e in Model.Events)
         {
             <li>
                 <a class="event-list-item" asp-controller="OrganizerEvents" asp-action="Edit" asp-route-id="@e.Id">

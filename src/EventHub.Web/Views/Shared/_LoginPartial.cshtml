@@ -14,7 +14,9 @@
                 <li><span class="dropdown-item-text small text-muted">@User.Identity.Name</span></li>
                 @if (User.IsInRole(AppRoles.Admin))
                 {
-                    <li><a class="dropdown-item" asp-controller="AdminOrders" asp-action="Index">訂單查詢</a></li>
+                    <li><a class="dropdown-item" asp-controller="AdminOrders" asp-action="Index">訂單</a></li>
+                    <li><a class="dropdown-item" asp-controller="AdminEvents" asp-action="Index">活動總覽</a></li>
+                    <li><a class="dropdown-item" asp-controller="AdminPayouts" asp-action="Index">撥款</a></li>
                 }
                 @if (User.IsInRole(AppRoles.Attendee))
                 {

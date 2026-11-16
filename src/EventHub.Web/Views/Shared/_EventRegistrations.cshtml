@@ -1,0 +1,147 @@
+@* 活動報名名單：主辦方（OrganizerEvents）與管理員（AdminEvents）共用。
+   兩個 controller 都有 Registrations、ExportRegistrations 兩個 action，連結不用指定 controller。 *@
+@using EventHub.Web.Data.Entities
+@using EventHub.Web.Infrastructure
+@using EventHub.Web.Models.Reports
+@using EventHub.Web.Services
+@model EventRegistrationsViewModel
+
+<div class="page-header">
+    <div>
+        <div class="d-flex align-items-center gap-3">
+            <h1 class="h3">報名名單</h1>
+            <span class="badge @Model.EventStatus.ToBadgeClass()">@Model.EventStatus.ToLabel()</span>
+        </div>
+        <div class="mt-2 fw-semibold">@Model.Title</div>
+        <div class="small text-muted">
+            @EventTimeFormatter.FormatRange(Model.StartAt, Model.EndAt)
+            <span>・</span>@Model.Location
+            @if (Model.IsAdminView)
+            {
+                <span>・</span><text>主辦方：@Model.OrganizerName</text>
+            }
+        </div>
+    </div>
+    <a class="btn btn-outline-secondary" asp-action="ExportRegistrations"
+       asp-route-id="@Model.EventId" asp-route-filter="@Model.Filter">匯出 CSV（@Model.Filter.ToLabel()）</a>
+</div>
+
+@if (Model.HasOrdersToRefund)
+{
+    <div class="alert alert-danger">
+        @if (Model.IsAdminView)
+        {
+            <text>活動已取消，還有 @Model.Counts.Paid 筆已付款的報名需要退款：請到綠界廠商後台退款後，到各訂單頁標記為已退款。</text>
+        }
+        else
+        {
+            <text>活動已取消，已付款的 @Model.Counts.Paid 筆報名由平台協助退款，這些款項不會撥給你。</text>
+        }
+    </div>
+}
+
+@* ---------- 摘要 ---------- *@
+<div class="stat-grid mb-4">
+    <div class="stat-tile">
+        <div class="stat-label">報名成功</div>
+        <div class="stat-value">@Model.Counts.Paid<small> 人</small></div>
+        @if (Model.Counts.Pending > 0)
+        {
+            <div class="stat-note">另有 @Model.Counts.Pending 人待付款</div>
+        }
+    </div>
+    <div class="stat-tile">
+        <div class="stat-label">名額</div>
+        <div class="stat-value">@Model.ReservedCount<small> / @Model.Capacity</small></div>
+        <div class="stat-note">剩 @Math.Max(0, Model.Capacity - Model.ReservedCount) 位</div>
+    </div>
+    @if (Model.IsFree)
+    {
+        <div class="stat-tile">
+            <div class="stat-label">報名費</div>
+            <div class="stat-value">免費</div>
+        </div>
+    }
+    else
+    {
+        <div class="stat-tile">
+            <div class="stat-label">實收</div>
+            <div class="stat-value"><small>NT$ </small>@Model.Amounts.Amount.ToString("N0")</div>
+            <div class="stat-note">@Model.Price.ToPriceLabel() × @Model.Amounts.PaidCount</div>
+        </div>
+        <div class="stat-tile">
+            <div class="stat-label">平台手續費</div>
+            <div class="stat-value"><small>NT$ </small>@Model.Amounts.PlatformFee.ToString("N0")</div>
+        </div>
+        <div class="stat-tile stat-tile-accent">
+            <div class="stat-label">@(Model.IsAdminView ? "應撥主辦方" : "你的實拿")</div>
+            <div class="stat-value"><small>NT$ </small>@Model.Amounts.OrganizerAmount.ToString("N0")</div>
+            <div class="stat-note">只計算已付款的報名</div>
+        </div>
+    }
+</div>
+
+@* ---------- 篩選 ---------- *@
+<nav class="filter-tabs" aria-label="依狀態篩選">
+    @foreach (var f in Enum.GetValues<RegistrationFilter>())
+    {
+        <a class="@(f == Model.Filter ? "active" : null)" aria-current="@(f == Model.Filter ? "page" : null)"
+           asp-action="Registrations" asp-route-id="@Model.EventId" asp-route-filter="@f">
+            @f.ToLabel()<span class="filter-count">@Model.Counts.Get(f)</span>
+        </a>
+    }
+</nav>
+
+@* ---------- 名單 ---------- *@
+@if (Model.Rows.Count == 0)
+{
+    <div class="panel text-center text-muted">沒有符合條件的報名。</div>
+}
+else
+{
+    <div class="panel p-0">
+        <div class="table-responsive">
+            <table class="table data-table mb-0">
+                <thead>
+                    <tr>
+                        <th class="text-end">#</th>
+                        <th>姓名</th>
+                        <th>手機</th>
+                        <th>Email</th>
+                        <th>備註</th>
+                        <th class="text-end">金額</th>
+                        <th>狀態</th>
+                        <th>報名時間</th>
+                        <th>訂單編號</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (var i = 0; i < Model.Rows.Count; i++)
+                    {
+                        var r = Model.Rows[i];
+                        <tr>
+                            <td class="text-end text-muted">@(i + 1)</td>
+                            <td class="text-nowrap">@r.AttendeeName</td>
+                            <td class="text-nowrap">@r.AttendeePhone</td>
+                            <td class="text-break">@r.AttendeeEmail</td>
+                            <td class="small text-break data-table-note">@r.Note</td>
+                            <td class="text-end text-nowrap">@r.Amount.ToPriceLabel()</td>
+                            <td><span class="badge @r.Status.ToBadgeClass()">@r.Status.ToLabel()</span></td>
+                            <td class="text-nowrap small">@EventTimeFormatter.FormatDateTime(r.CreatedAt)</td>
+                            <td class="font-monospace small">
+                                @if (Model.IsAdminView)
+                                {
+                                    <a asp-controller="AdminOrders" asp-action="Details" asp-route-orderNo="@r.OrderNo">@r.OrderNo</a>
+                                }
+                                else
+                                {
+                                    @r.OrderNo
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}

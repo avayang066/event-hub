@@ -1,6 +1,8 @@
 using EventHub.Web.Data;
 using EventHub.Web.Data.Entities;
+using EventHub.Web.Infrastructure;
 using EventHub.Web.Models.Organizer;
+using EventHub.Web.Models.Reports;
 using EventHub.Web.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -8,11 +10,13 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace EventHub.Web.Controllers;
 
-/// <summary>主辦方新增、編輯活動與變更活動狀態。</summary>
+/// <summary>主辦方新增、編輯活動、變更活動狀態，以及查看報名名單。</summary>
 [Authorize(Roles = AppRoles.Organizer)]
 [Route("Organizer/Events")]
 public class OrganizerEventsController(
     OrganizerEventService events,
+    ReportService reports,
+    TimeProvider timeProvider,
     UserManager<ApplicationUser> userManager) : Controller
 {
     /// <summary>整個表單（含圖片）的上限；圖片本身 5MB 的限制另外檢查，才能顯示友善的錯誤訊息。</summary>
@@ -127,6 +131,28 @@ public class OrganizerEventsController(
         }
 
         return RedirectToAction(nameof(Edit), new { id });
+    }
+
+    // ---------------- 報名名單 ----------------
+
+    [HttpGet("{id:int}/Registrations")]
+    public async Task<IActionResult> Registrations(int id, RegistrationFilter filter = RegistrationFilter.Active)
+    {
+        var model = await reports.GetEventRegistrationsAsync(id, UserId, filter, isAdminView: false);
+        return model is null ? NotFound() : View(model);
+    }
+
+    [HttpGet("{id:int}/Registrations/Export")]
+    public async Task<IActionResult> ExportRegistrations(int id, RegistrationFilter filter = RegistrationFilter.Active)
+    {
+        var model = await reports.GetEventRegistrationsAsync(id, UserId, filter, isAdminView: false);
+        if (model is null)
+        {
+            return NotFound();
+        }
+
+        return File(RegistrationCsv.Build(model), "text/csv; charset=utf-8",
+            RegistrationCsv.FileName(model, timeProvider.GetTaiwanNow()));
     }
 
     // ---------------- 共用 ----------------

@@ -1,0 +1,8 @@
+@model EventHub.Web.Models.Reports.EventRegistrationsViewModel
+@{
+    ViewData["Title"] = $"報名名單：{Model.Title}";
+}
+
+<a class="back-link" asp-action="Edit" asp-route-id="@Model.EventId">‹ 編輯活動</a>
+
+<partial name="_EventRegistrations" model="Model" />

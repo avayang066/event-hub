@@ -11,7 +11,7 @@ public class EventQueryService(AppDbContext db, TimeProvider timeProvider)
 {
     public const int PageSize = 20;
 
-    public const int MaxKeywordLength = 50;
+    public const int MaxKeywordLength = SearchKeyword.MaxLength;
 
     /// <summary>
     /// 已上架、尚未結束的活動，依開始時間由近到遠排序。
@@ -21,7 +21,7 @@ public class EventQueryService(AppDbContext db, TimeProvider timeProvider)
     public async Task<EventListViewModel> ListUpcomingAsync(int page, string? keyword = null)
     {
         page = Math.Max(1, page);
-        keyword = NormalizeKeyword(keyword);
+        keyword = SearchKeyword.Normalize(keyword);
         var now = timeProvider.GetTaiwanNow();
 
         var query = db.Events
@@ -30,8 +30,8 @@ public class EventQueryService(AppDbContext db, TimeProvider timeProvider)
 
         if (keyword is not null)
         {
-            var pattern = $"%{EscapeLikePattern(keyword)}%";
-            query = query.Where(e => EF.Functions.Like(e.Title, pattern, LikeEscapeChar));
+            var pattern = SearchKeyword.ToContainsPattern(keyword);
+            query = query.Where(e => EF.Functions.Like(e.Title, pattern, SearchKeyword.LikeEscapeChar));
         }
 
         // 多取一筆，用來判斷有沒有下一頁
@@ -66,30 +66,6 @@ public class EventQueryService(AppDbContext db, TimeProvider timeProvider)
             Keyword = keyword,
         };
     }
-
-    private const string LikeEscapeChar = "\\";
-
-    /// <summary>去頭尾空白、限制長度；空字串視為沒有搜尋。</summary>
-    private static string? NormalizeKeyword(string? keyword)
-    {
-        keyword = keyword?.Trim();
-        if (string.IsNullOrEmpty(keyword))
-        {
-            return null;
-        }
-
-        return keyword.Length > MaxKeywordLength ? keyword[..MaxKeywordLength] : keyword;
-    }
-
-    /// <summary>
-    /// 跳脫 LIKE 的特殊字元，讓使用者輸入的 % 和 _ 被當成一般文字，
-    /// 否則搜尋「100%」會變成萬用字元比對。
-    /// </summary>
-    private static string EscapeLikePattern(string value) =>
-        value
-            .Replace(LikeEscapeChar, LikeEscapeChar + LikeEscapeChar)
-            .Replace("%", LikeEscapeChar + "%")
-            .Replace("_", LikeEscapeChar + "_");
 
     /// <summary>
     /// 活動詳情。已上架、已取消的活動任何人都看得到（已報名的人可能從舊連結進來）；

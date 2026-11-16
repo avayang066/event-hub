@@ -1,14 +1,110 @@
+@using EventHub.Web.Data.Entities
+@using EventHub.Web.Infrastructure
+@using EventHub.Web.Services
+@model EventHub.Web.Models.Reports.AdminOrderListViewModel
 @{
-    ViewData["Title"] = "訂單查詢";
-    ViewData["PageWidth"] = "narrow";
+    ViewData["Title"] = "訂單";
+
+    // 資料庫的狀態名稱 → 篩選選單顯示的文字
+    var statusOptions = new (OrderStatus Value, string Label)[]
+    {
+        (OrderStatus.Paid, "報名成功"),
+        (OrderStatus.Pending, "待付款"),
+        (OrderStatus.Cancelled, "已取消"),
+        (OrderStatus.Refunded, "已退款"),
+    };
 }
 
-<div class="panel">
-    <h1 class="h4 mb-4">訂單查詢</h1>
-
-    <form class="event-search" asp-action="Index" method="get">
-        <input type="search" name="q" class="form-control font-monospace" placeholder="輸入訂單編號，例如 EH2611..."
-               maxlength="20" autocapitalize="characters" aria-label="訂單編號" />
-        <button type="submit" class="btn btn-primary">查詢</button>
-    </form>
+<div class="page-header">
+    <h1 class="h3">訂單</h1>
 </div>
+
+<form class="filter-form" asp-action="Index" method="get">
+    <input type="search" name="q" value="@Model.Keyword" class="form-control filter-form-keyword"
+           placeholder="訂單編號、姓名、Email、手機" maxlength="@SearchKeyword.MaxLength" aria-label="關鍵字" />
+    <select name="status" class="form-select filter-form-select" aria-label="訂單狀態">
+        <option value="">全部狀態</option>
+        @foreach (var (value, label) in statusOptions)
+        {
+            <!option value="@value" selected="@(value == Model.Status)">@label</!option>
+        }
+    </select>
+    <div class="filter-form-dates">
+        <input type="date" name="from" value="@(Model.From?.ToString("yyyy-MM-dd"))" class="form-control" aria-label="報名日期起" />
+        <span class="text-muted">～</span>
+        <input type="date" name="to" value="@(Model.To?.ToString("yyyy-MM-dd"))" class="form-control" aria-label="報名日期迄" />
+    </div>
+    <button type="submit" class="btn btn-primary">篩選</button>
+    @if (Model.Keyword is not null || Model.Status is not null || Model.From is not null || Model.To is not null)
+    {
+        <a class="btn btn-link" asp-action="Index">清除</a>
+    }
+</form>
+
+<p class="small text-muted mb-2">共 @Model.TotalCount.ToString("N0") 筆</p>
+
+@if (Model.Items.Count == 0)
+{
+    <div class="panel text-center text-muted">沒有符合條件的訂單。</div>
+}
+else
+{
+    <div class="panel p-0">
+        <div class="table-responsive">
+            <table class="table data-table mb-0">
+                <thead>
+                    <tr>
+                        <th>訂單編號</th>
+                        <th>活動</th>
+                        <th>報名者</th>
+                        <th class="text-end">金額</th>
+                        <th>狀態</th>
+                        <th>報名時間</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var o in Model.Items)
+                    {
+                        <tr>
+                            <td class="font-monospace small">
+                                <a asp-action="Details" asp-route-orderNo="@o.OrderNo">@o.OrderNo</a>
+                            </td>
+                            <td>
+                                <a class="text-reset" asp-controller="AdminEvents" asp-action="Registrations" asp-route-id="@o.EventId">@o.EventTitle</a>
+                            </td>
+                            <td>
+                                @o.AttendeeName
+                                <div class="small text-muted text-break">@o.AttendeeEmail</div>
+                            </td>
+                            <td class="text-end text-nowrap">@o.Amount.ToPriceLabel()</td>
+                            <td><span class="badge @o.Status.ToBadgeClass()">@o.Status.ToLabel()</span></td>
+                            <td class="text-nowrap small">@EventTimeFormatter.FormatDateTime(o.CreatedAt)</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+
+@if (Model.HasPreviousPage || Model.HasNextPage)
+{
+    var from = Model.From?.ToString("yyyy-MM-dd");
+    var to = Model.To?.ToString("yyyy-MM-dd");
+    <nav class="pager" aria-label="分頁">
+        @if (Model.HasPreviousPage)
+        {
+            <a class="btn btn-outline-secondary" asp-action="Index" asp-route-page="@(Model.Page - 1)"
+               asp-route-q="@Model.Keyword" asp-route-status="@Model.Status" asp-route-from="@from" asp-route-to="@to">‹ 上一頁</a>
+        }
+        else
+        {
+            <span></span>
+        }
+        @if (Model.HasNextPage)
+        {
+            <a class="btn btn-outline-secondary" asp-action="Index" asp-route-page="@(Model.Page + 1)"
+               asp-route-q="@Model.Keyword" asp-route-status="@Model.Status" asp-route-from="@from" asp-route-to="@to">下一頁 ›</a>
+        }
+    </nav>
+}

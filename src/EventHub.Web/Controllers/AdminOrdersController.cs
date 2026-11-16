@@ -1,4 +1,5 @@
 using EventHub.Web.Data;
+using EventHub.Web.Data.Entities;
 using EventHub.Web.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -6,24 +7,22 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace EventHub.Web.Controllers;
 
-/// <summary>管理員：查詢訂單、標記退款。完整後台列表於後續步驟實作。</summary>
+/// <summary>管理員：訂單列表、訂單詳情、標記退款。</summary>
 [Authorize(Roles = AppRoles.Admin)]
 [Route("Admin/Orders")]
 public class AdminOrdersController(
     OrderQueryService orders,
     OrderStateService orderState,
+    ReportService reports,
     UserManager<ApplicationUser> userManager) : Controller
 {
-    /// <summary>以訂單編號查詢</summary>
+    /// <summary>訂單列表：可依關鍵字（訂單編號、姓名、Email、手機）、狀態、報名日期篩選</summary>
     [HttpGet("")]
-    public IActionResult Index(string? q)
+    public async Task<IActionResult> Index(
+        string? q, OrderStatus? status, DateTime? from, DateTime? to, int page = 1)
     {
-        if (!string.IsNullOrWhiteSpace(q))
-        {
-            return RedirectToAction(nameof(Details), new { orderNo = q.Trim().ToUpperInvariant() });
-        }
-
-        return View();
+        var model = await reports.ListOrdersAsync(q, status, from, to, page);
+        return View(model);
     }
 
     [HttpGet("{orderNo}")]

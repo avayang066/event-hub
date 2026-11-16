@@ -1,0 +1,105 @@
+@using EventHub.Web.Data.Entities
+@using EventHub.Web.Infrastructure
+@model EventHub.Web.Models.Reports.AdminEventListViewModel
+@{
+    ViewData["Title"] = "活動總覽";
+}
+
+<div class="page-header">
+    <h1 class="h3">活動總覽</h1>
+</div>
+
+<form class="filter-form" asp-action="Index" method="get">
+    @if (Model.OrganizerId is not null)
+    {
+        <input type="hidden" name="organizer" value="@Model.OrganizerId" />
+    }
+    <input type="search" name="q" value="@Model.Keyword" class="form-control filter-form-keyword"
+           placeholder="活動名稱、主辦方" maxlength="@SearchKeyword.MaxLength" aria-label="關鍵字" />
+    <select name="status" class="form-select filter-form-select" aria-label="活動狀態">
+        <option value="">全部狀態</option>
+        @foreach (var s in Enum.GetValues<EventStatus>())
+        {
+            <!option value="@s" selected="@(s == Model.Status)">@s.ToLabel()</!option>
+        }
+    </select>
+    <button type="submit" class="btn btn-primary">篩選</button>
+    @if (Model.Keyword is not null || Model.Status is not null || Model.OrganizerId is not null)
+    {
+        <a class="btn btn-link" asp-action="Index">清除</a>
+    }
+</form>
+
+@if (Model.OrganizerId is not null)
+{
+    <div class="panel-soft mb-3 small">
+        只顯示主辦方「<strong>@(Model.OrganizerName ?? "（不存在的帳號）")</strong>」的活動
+    </div>
+}
+
+@if (Model.Items.Count == 0)
+{
+    <div class="panel text-center text-muted">沒有符合條件的活動。</div>
+}
+else
+{
+    <div class="panel p-0">
+        <div class="table-responsive">
+            <table class="table data-table mb-0">
+                <thead>
+                    <tr>
+                        <th>活動</th>
+                        <th>主辦方</th>
+                        <th>開始時間</th>
+                        <th>狀態</th>
+                        <th class="text-end">名額</th>
+                        <th class="text-end">已付款</th>
+                        <th class="text-end">實收</th>
+                        <th class="text-end">手續費</th>
+                        <th class="text-end">應撥主辦方</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var e in Model.Items)
+                    {
+                        <tr>
+                            <td>
+                                <a class="fw-semibold" asp-action="Registrations" asp-route-id="@e.EventId">@e.Title</a>
+                                <div class="small text-muted">@e.Price.ToPriceLabel()</div>
+                            </td>
+                            <td class="small">@e.OrganizerName</td>
+                            <td class="text-nowrap small">@EventTimeFormatter.FormatDateTime(e.StartAt)</td>
+                            <td><span class="badge @e.Status.ToBadgeClass()">@e.Status.ToLabel()</span></td>
+                            <td class="text-end text-nowrap">@e.ReservedCount / @e.Capacity</td>
+                            <td class="text-end">@e.Amounts.PaidCount</td>
+                            <td class="text-end text-nowrap">@e.Amounts.Amount.ToString("N0")</td>
+                            <td class="text-end text-nowrap">@e.Amounts.PlatformFee.ToString("N0")</td>
+                            <td class="text-end text-nowrap fw-semibold">@e.Amounts.OrganizerAmount.ToString("N0")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <p class="small text-muted mt-2">金額單位：新台幣元，只計算已付款的報名。「名額」為已佔用（含待付款）／名額上限。</p>
+}
+
+@if (Model.HasPreviousPage || Model.HasNextPage)
+{
+    <nav class="pager" aria-label="分頁">
+        @if (Model.HasPreviousPage)
+        {
+            <a class="btn btn-outline-secondary" asp-action="Index" asp-route-page="@(Model.Page - 1)"
+               asp-route-q="@Model.Keyword" asp-route-status="@Model.Status" asp-route-organizer="@Model.OrganizerId">‹ 上一頁</a>
+        }
+        else
+        {
+            <span></span>
+        }
+        @if (Model.HasNextPage)
+        {
+            <a class="btn btn-outline-secondary" asp-action="Index" asp-route-page="@(Model.Page + 1)"
+               asp-route-q="@Model.Keyword" asp-route-status="@Model.Status" asp-route-organizer="@Model.OrganizerId">下一頁 ›</a>
+        }
+    </nav>
+}

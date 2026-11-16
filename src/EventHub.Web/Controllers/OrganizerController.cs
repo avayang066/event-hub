@@ -1,4 +1,5 @@
 using EventHub.Web.Data;
+using EventHub.Web.Models.Organizer;
 using EventHub.Web.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -10,12 +11,19 @@ namespace EventHub.Web.Controllers;
 [Authorize(Roles = AppRoles.Organizer)]
 public class OrganizerController(
     OrganizerEventService events,
+    ReportService reports,
     UserManager<ApplicationUser> userManager) : Controller
 {
-    /// <summary>我的活動</summary>
+    /// <summary>我的活動 + 收款摘要</summary>
     public async Task<IActionResult> Index()
     {
-        var list = await events.ListAsync(userManager.GetUserId(User)!);
-        return View(list);
+        var organizerId = userManager.GetUserId(User)!;
+        var payouts = await reports.GetPayoutsAsync(organizerId);
+
+        return View(new OrganizerDashboardViewModel
+        {
+            Events = await events.ListAsync(organizerId),
+            Payout = payouts.FirstOrDefault(),
+        });
     }
 }
