@@ -6,6 +6,7 @@ using EventHub.Web.Data;
 using EventHub.Web.Data.Entities;
 using EventHub.Web.Infrastructure;
 using EventHub.Web.Models.Payments;
+using EventHub.Web.Services.Email;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
@@ -22,6 +23,7 @@ namespace EventHub.Web.Services;
 public class EcpayPaymentService(
     AppDbContext db,
     OrderStateService orderState,
+    ConfirmationEmailQueue emailQueue,
     IOptions<EcpayOptions> options,
     TimeProvider timeProvider,
     ILogger<EcpayPaymentService> logger)
@@ -241,7 +243,8 @@ public class EcpayPaymentService(
         var outcome = await orderState.MarkPaidAsync(attempt.OrderNo, n.EcpayTradeNo, n.PaymentType);
         if (outcome == OrderStateService.MarkPaidOutcome.Paid)
         {
-            // TODO 第 7 步：寄出報名成功通知信
+            // 放進佇列由背景寄出，不等寄信完成，才能馬上回 1|OK 給綠界
+            emailQueue.Enqueue(attempt.OrderNo);
             return PaymentProcessResult.Paid;
         }
 

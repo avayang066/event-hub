@@ -2,6 +2,7 @@ using EventHub.Web.Data;
 using EventHub.Web.Data.Entities;
 using EventHub.Web.Infrastructure;
 using EventHub.Web.Models.Registration;
+using EventHub.Web.Services.Email;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
@@ -20,6 +21,7 @@ public class RegistrationService(
     AppDbContext db,
     TimeProvider timeProvider,
     IOptions<EcpayOptions> ecpayOptions,
+    ConfirmationEmailQueue emailQueue,
     ILogger<RegistrationService> logger)
 {
     /// <summary>待付款保留名額的時間</summary>
@@ -169,6 +171,12 @@ public class RegistrationService(
 
         logger.LogInformation("報名成功 訂單 {OrderNo} 活動 {EventId} 會員 {UserId} 金額 {Amount}",
             order.OrderNo, eventId, userId, amount);
+
+        // 免費活動報名即成功，寄出報名成功信（付費活動等綠界付款成功才寄）
+        if (isFree)
+        {
+            emailQueue.Enqueue(order.OrderNo);
+        }
 
         return RegisterResult.Created(order.OrderNo);
     }

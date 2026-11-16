@@ -81,4 +81,14 @@ ngrok http --url=stature-karaoke-rigging.ngrok-free.dev 5117
 ### 寄信
 
 開發環境預設寄到 `localhost:1025`，建議裝 [Mailpit](https://mailpit.axllent.org/) 收測試信
-（網頁介面 http://localhost:8025）。
+（網頁介面 http://localhost:8025）：到 [Releases](https://github.com/axllent/mailpit/releases)
+下載 `mailpit-windows-amd64.zip`，解壓後執行 `mailpit.exe` 即可。信不會真的寄出。
+
+報名成功信：
+
+- 寄送時機：免費活動報名成功、付費活動收到綠界付款成功通知。
+- 報名／付款流程只把訂單放進佇列就返回，由背景服務寄出，不會拖慢綠界通知的回應。
+- `orders.confirmation_email_sent_at` 有值就不再寄，同一張訂單只寄一封。
+- 寄信失敗（例如 Mailpit 沒開）會清回 NULL，每 60 秒補寄一次（`ConfirmationEmail:RetryIntervalSeconds`），
+  只補寄付款後 24 小時內的訂單。
+- 信件裡「查看報名明細」的連結使用 `Site:BaseUrl`。

@@ -3,7 +3,9 @@ using System.Text.Encodings.Web;
 using System.Text.Unicode;
 using EventHub.Web.Data;
 using EventHub.Web.Infrastructure;
+using EventHub.Web.Infrastructure.Email;
 using EventHub.Web.Services;
+using EventHub.Web.Services.Email;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -64,6 +66,7 @@ builder.Services.Configure<EcpayOptions>(builder.Configuration.GetSection(EcpayO
 builder.Services.Configure<SmtpOptions>(builder.Configuration.GetSection(SmtpOptions.SectionName));
 builder.Services.Configure<AdminAccountOptions>(builder.Configuration.GetSection(AdminAccountOptions.SectionName));
 builder.Services.Configure<UploadOptions>(builder.Configuration.GetSection(UploadOptions.SectionName));
+builder.Services.Configure<SiteOptions>(builder.Configuration.GetSection(SiteOptions.SectionName));
 
 // ---- 商業邏輯與共用服務 ----
 builder.Services.AddSingleton(TimeProvider.System);
@@ -74,6 +77,13 @@ builder.Services.AddScoped<RegistrationService>();
 builder.Services.AddScoped<OrderQueryService>();
 builder.Services.AddScoped<OrderStateService>();
 builder.Services.AddScoped<EcpayPaymentService>();
+
+// ---- 報名成功信：報名／付款成功時放進佇列，由背景寄出；失敗的定期補寄 ----
+builder.Services.AddSingleton<IEmailSender, SmtpEmailSender>();
+builder.Services.AddSingleton<ConfirmationEmailQueue>();
+builder.Services.AddScoped<ConfirmationEmailService>();
+builder.Services.Configure<ConfirmationEmailOptions>(builder.Configuration.GetSection(ConfirmationEmailOptions.SectionName));
+builder.Services.AddHostedService<ConfirmationEmailBackgroundService>();
 
 // ---- 背景排程：取消逾期未付款的訂單 ----
 builder.Services.Configure<OrderExpirationOptions>(builder.Configuration.GetSection(OrderExpirationOptions.SectionName));

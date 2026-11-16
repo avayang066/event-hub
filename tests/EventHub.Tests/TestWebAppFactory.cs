@@ -1,4 +1,5 @@
 using EventHub.Web.Data;
+using EventHub.Web.Infrastructure.Email;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Data.Sqlite;
@@ -21,6 +22,9 @@ public class TestWebAppFactory : WebApplicationFactory<Program>
     private readonly string _connectionString;
 
     public string UploadRoot => Path.Combine(_tempRoot, "uploads");
+
+    /// <summary>網站寄出的信（測試用的假寄信器）</summary>
+    public FakeEmailSender Emails { get; } = new();
 
     public const string EcpayMerchantId = "3002607";
     public const string EcpayHashKey = "pwFHCqoQZGmho4w6";
@@ -56,11 +60,18 @@ public class TestWebAppFactory : WebApplicationFactory<Program>
         builder.UseSetting("Ecpay:HashIV", EcpayHashIV);
         builder.UseSetting("Ecpay:CheckoutUrl", EcpayCheckoutUrl);
         builder.UseSetting("Ecpay:PublicBaseUrl", "https://eventhub.example.test");
+        builder.UseSetting("Site:BaseUrl", "https://eventhub.example.test");
+        // 補寄排程在測試中不自動執行（需要時由測試直接呼叫），佇列寄信照常運作
+        builder.UseSetting("ConfirmationEmail:RetryIntervalSeconds", "3600");
 
         builder.ConfigureServices(services =>
         {
             services.RemoveAll<DbContextOptions<AppDbContext>>();
             services.AddDbContext<AppDbContext>(o => o.UseSqlite(_connectionString));
+
+            // 不真的寄信，改記錄在 Emails
+            services.RemoveAll<IEmailSender>();
+            services.AddSingleton<IEmailSender>(Emails);
         });
     }
 

@@ -286,6 +286,39 @@ public partial class EcpayPaymentTests(TestWebAppFactory factory) : IClassFixtur
     }
 
     [Fact]
+    public async Task Successful_payment_sends_one_confirmation_email()
+    {
+        var (orderNo, _) = await SeedOrderAsync(amount: 1200);
+        var attendeeEmail = (await GetOrderAsync(orderNo)).AttendeeEmail;
+        var merchantTradeNo = await SeedAttemptAsync(orderNo);
+        var fields = Notification(merchantTradeNo, 1200, NewTradeNo());
+
+        await PostNotifyAsync(fields);
+        await PostNotifyAsync(fields); // 綠界重送
+
+        var message = await factory.Emails.WaitForAsync(attendeeEmail);
+        Assert.Contains(orderNo, message.TextBody);
+        Assert.Contains("NT$ 1,200", message.TextBody);
+
+        await Task.Delay(500); // 給背景寄信一點時間，確認沒有第二封
+        Assert.Single(factory.Emails.SentTo(attendeeEmail));
+        Assert.NotNull((await GetOrderAsync(orderNo)).ConfirmationEmailSentAt);
+    }
+
+    [Fact]
+    public async Task Simulated_payment_sends_no_email()
+    {
+        var (orderNo, _) = await SeedOrderAsync();
+        var attendeeEmail = (await GetOrderAsync(orderNo)).AttendeeEmail;
+        var merchantTradeNo = await SeedAttemptAsync(orderNo);
+
+        await PostNotifyAsync(Notification(merchantTradeNo, 1200, NewTradeNo(), simulatePaid: "1"));
+
+        await Assert.ThrowsAsync<TimeoutException>(
+            () => factory.Emails.WaitForAsync(attendeeEmail, TimeSpan.FromSeconds(1)));
+    }
+
+    [Fact]
     public async Task Repeated_notification_is_processed_only_once()
     {
         var (orderNo, _) = await SeedOrderAsync();
