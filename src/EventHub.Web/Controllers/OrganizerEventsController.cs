@@ -151,8 +151,9 @@ public class OrganizerEventsController(
             return NotFound();
         }
 
-        return File(RegistrationCsv.Build(model), "text/csv; charset=utf-8",
-            RegistrationCsv.FileName(model, timeProvider.GetTaiwanNow()));
+        var now = timeProvider.GetTaiwanNow();
+        return File(RegistrationExcel.Build(model, now), RegistrationExcel.ContentType,
+            RegistrationExcel.FileName(model, now));
     }
 
     // ---------------- 共用 ----------------

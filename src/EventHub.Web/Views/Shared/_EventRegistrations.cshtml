@@ -23,7 +23,7 @@
         </div>
     </div>
     <a class="btn btn-outline-secondary" asp-action="ExportRegistrations"
-       asp-route-id="@Model.EventId" asp-route-filter="@Model.Filter">匯出 CSV（@Model.Filter.ToLabel()）</a>
+       asp-route-id="@Model.EventId" asp-route-filter="@Model.Filter">匯出 Excel（@Model.Filter.ToLabel()）</a>
 </div>
 
 @if (Model.HasOrdersToRefund)

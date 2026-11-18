@@ -101,7 +101,7 @@ ngrok http --url=stature-karaoke-rigging.ngrok-free.dev 5117
 
 - 「我的活動」（`/Organizer`）上方顯示收款摘要：付費報名數、實收、平台手續費、實拿。
 - 編輯活動頁的「報名名單與金額」（`/Organizer/Events/{id}/Registrations`）：可依狀態篩選，
-  預設顯示有效報名（報名成功 + 待付款），可匯出 CSV（UTF-8 含 BOM，Excel 可直接開）。
+  預設顯示有效報名（報名成功 + 待付款），可匯出 Excel（.xlsx，含「簽到」空白欄，可印出來點名）。
 
 管理員：
 

@@ -1,5 +1,5 @@
 using System.Net;
-using System.Text;
+using ClosedXML.Excel;
 using EventHub.Web.Data;
 using EventHub.Web.Data.Entities;
 using EventHub.Web.Infrastructure;
@@ -10,7 +10,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace EventHub.Tests;
 
-/// <summary>後台：報名名單、金額彙總、CSV 匯出、訂單列表、撥款彙總、權限。</summary>
+/// <summary>後台：報名名單、金額彙總、Excel 匯出、訂單列表、撥款彙總、權限。</summary>
 public class ReportTests(TestWebAppFactory factory) : IClassFixture<TestWebAppFactory>
 {
     private static DateTime TaiwanNow => DateTime.UtcNow.AddHours(8);
@@ -176,10 +176,10 @@ public class ReportTests(TestWebAppFactory factory) : IClassFixture<TestWebAppFa
         var client = await LoginAsync(otherOrganizerEmail);
 
         var page = await client.GetAsync(RegistrationsUrl(eventId));
-        var csv = await client.GetAsync($"{RegistrationsUrl(eventId)}/Export");
+        var excel = await client.GetAsync($"{RegistrationsUrl(eventId)}/Export");
 
         Assert.Equal(HttpStatusCode.NotFound, page.StatusCode);
-        Assert.Equal(HttpStatusCode.NotFound, csv.StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, excel.StatusCode);
     }
 
     [Fact]
@@ -196,44 +196,102 @@ public class ReportTests(TestWebAppFactory factory) : IClassFixture<TestWebAppFa
         Assert.Contains("由平台協助退款", html);
     }
 
-    // ---------------- CSV 匯出 ----------------
+    // ---------------- Excel 匯出 ----------------
+
+    /// <summary>下載匯出的 Excel，回傳工作表、標題列的列號、欄名 → 欄號。</summary>
+    private static async Task<(IXLWorksheet Sheet, int HeaderRow, Dictionary<string, int> Columns)> ReadExcelAsync(
+        HttpResponseMessage response)
+    {
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal(
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            response.Content.Headers.ContentType!.MediaType);
+
+        var workbook = new XLWorkbook(new MemoryStream(await response.Content.ReadAsByteArrayAsync()));
+        var sheet = workbook.Worksheet("報名名單");
+        var headerRow = sheet.Column(1).CellsUsed().First(c => c.GetString() == "序號").Address.RowNumber;
+        var columns = sheet.Row(headerRow).CellsUsed()
+            .ToDictionary(c => c.GetString(), c => c.Address.ColumnNumber);
+        return (sheet, headerRow, columns);
+    }
 
     [Fact]
-    public async Task Csv_export_contains_registrations_with_bom()
+    public async Task Excel_export_contains_registrations()
     {
         var (eventId, _, organizerEmail) = await SeedEventWithOrdersAsync();
         var client = await LoginAsync(organizerEmail);
 
         var response = await client.GetAsync($"{RegistrationsUrl(eventId)}/Export?filter=Paid");
+        var (sheet, headerRow, col) = await ReadExcelAsync(response);
 
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        Assert.Equal("text/csv", response.Content.Headers.ContentType!.MediaType);
-        Assert.Contains($"event-{eventId}-registrations-", response.Content.Headers.ContentDisposition!.FileNameStar ?? response.Content.Headers.ContentDisposition.FileName);
+        Assert.StartsWith("報名名單_報表測試活動_", response.Content.Headers.ContentDisposition!.FileNameStar);
+        Assert.Equal("報表測試活動", sheet.Cell(1, 1).GetString());
+        Assert.Contains("簽到", col.Keys);
 
-        var bytes = await response.Content.ReadAsByteArrayAsync();
-        Assert.Equal(new byte[] { 0xEF, 0xBB, 0xBF }, bytes[..3]);
+        // 已付款 2 筆
+        var rows = Enumerable.Range(headerRow + 1, 2).Select(sheet.Row).ToList();
+        Assert.True(sheet.Row(headerRow + 3).IsEmpty());
+        Assert.Equal(1, rows[0].Cell(col["序號"]).GetValue<int>());
+        Assert.Equal(2, rows[1].Cell(col["序號"]).GetValue<int>());
 
-        var lines = Encoding.UTF8.GetString(bytes[3..]).Split("\r\n", StringSplitOptions.RemoveEmptyEntries);
-        Assert.StartsWith("訂單編號,姓名,手機,Email", lines[0]);
-        Assert.Equal(3, lines.Length); // 標題 + 已付款 2 筆
-        Assert.Contains(lines, l => l.Contains("報名者甲") && l.Contains("報名成功") && l.Contains(",1000,50,950,"));
+        var first = rows.Single(r => r.Cell(col["姓名"]).GetString() == "報名者甲");
+        Assert.Equal("報名成功", first.Cell(col["狀態"]).GetString());
+        Assert.Equal(1000, first.Cell(col["金額"]).GetValue<int>());
+        Assert.Equal(50, first.Cell(col["平台手續費"]).GetValue<int>());
+        Assert.Equal(950, first.Cell(col["主辦方實拿"]).GetValue<int>());
+        Assert.True(first.Cell(col["報名時間"]).Value.IsDateTime);
+
+        // 手機以文字儲存，開頭的 0 不會不見
+        var phone = first.Cell(col["手機"]);
+        Assert.True(phone.Value.IsText);
+        Assert.Equal("0912345678", phone.GetString());
     }
 
     [Fact]
-    public async Task Csv_export_escapes_formulas_and_commas()
+    public async Task Excel_export_never_turns_input_into_formulas()
     {
         var (organizerId, organizerEmail) = await CreateUserAsync(AppRoles.Organizer);
         var (attendeeId, _) = await CreateUserAsync(AppRoles.Attendee);
         var eventId = await SeedEventAsync(organizerId);
-        await SeedOrderAsync(eventId, organizerId, attendeeId, OrderStatus.Paid,
-            "=HYPERLINK(\"http://evil.test\")", note: "素食, 不吃辣");
+        const string evilName = "=HYPERLINK(\"http://evil.test\")";
+        await SeedOrderAsync(eventId, organizerId, attendeeId, OrderStatus.Paid, evilName, note: "素食, 不吃辣");
         var client = await LoginAsync(organizerEmail);
 
-        var csv = await client.GetStringAsync($"{RegistrationsUrl(eventId)}/Export");
+        var (sheet, headerRow, col) = await ReadExcelAsync(await client.GetAsync($"{RegistrationsUrl(eventId)}/Export"));
 
-        // 公式開頭加 '，含引號整欄用雙引號包起來
-        Assert.Contains("\"'=HYPERLINK(\"\"http://evil.test\"\")\"", csv);
-        Assert.Contains("\"素食, 不吃辣\"", csv);
+        var name = sheet.Cell(headerRow + 1, col["姓名"]);
+        Assert.False(name.HasFormula);
+        Assert.Equal(evilName, name.GetString());
+        Assert.Equal("素食, 不吃辣", sheet.Cell(headerRow + 1, col["備註"]).GetString());
+    }
+
+    [Fact]
+    public async Task Free_event_excel_has_no_money_columns()
+    {
+        var (organizerId, organizerEmail) = await CreateUserAsync(AppRoles.Organizer);
+        var (attendeeId, _) = await CreateUserAsync(AppRoles.Attendee);
+        var eventId = await SeedEventAsync(organizerId, price: 0);
+        await SeedOrderAsync(eventId, organizerId, attendeeId, OrderStatus.Paid, "免費報名者", amount: 0);
+        var client = await LoginAsync(organizerEmail);
+
+        var (_, _, col) = await ReadExcelAsync(await client.GetAsync($"{RegistrationsUrl(eventId)}/Export"));
+
+        Assert.DoesNotContain("金額", col.Keys);
+        Assert.DoesNotContain("付款時間", col.Keys);
+        Assert.Contains("姓名", col.Keys);
+        Assert.Contains("簽到", col.Keys);
+    }
+
+    [Fact]
+    public async Task Excel_export_works_with_no_registrations()
+    {
+        var (organizerId, organizerEmail) = await CreateUserAsync(AppRoles.Organizer);
+        var eventId = await SeedEventAsync(organizerId);
+        var client = await LoginAsync(organizerEmail);
+
+        var (sheet, headerRow, _) = await ReadExcelAsync(await client.GetAsync($"{RegistrationsUrl(eventId)}/Export"));
+
+        Assert.True(sheet.Row(headerRow + 1).IsEmpty());
     }
 
     // ---------------- 主辦方：我的活動收款摘要 ----------------
@@ -323,8 +381,8 @@ public class ReportTests(TestWebAppFactory factory) : IClassFixture<TestWebAppFa
         Assert.Contains("應撥主辦方", html);
         Assert.Contains("href=\"/Admin/Orders/EH", html);
 
-        var csv = await admin.GetAsync($"/Admin/Events/{eventId}/Export");
-        Assert.Equal(HttpStatusCode.OK, csv.StatusCode);
+        var excel = await admin.GetAsync($"/Admin/Events/{eventId}/Export");
+        Assert.Equal(HttpStatusCode.OK, excel.StatusCode);
     }
 
     [Fact]
